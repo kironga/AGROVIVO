@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Checkout | Agrofields Planet{% endblock %}
+{% block content %}
+<section class="page-hero compact"><p class="eyebrow">SECURE CHECKOUT</p><h1>Delivery details</h1><p>Free delivery for orders over KES 10,000. Otherwise KES 350.</p></section>
+<section class="section checkout-layout">
+ <form method="post" class="form-card">{% csrf_token %}
+  <label>Full name<input required name="name" autocomplete="name"></label>
+  <label>Phone number<input required name="phone" type="tel" placeholder="0712345678 or +254712345678" pattern="(?:07[0-9]{8}|\+?2547[0-9]{8})" maxlength="13" autocomplete="tel" aria-describedby="phone-help"><small id="phone-help">Enter a number starting with 07 or +2547.</small></label>
+  <label>Email (optional)<input name="email" type="email" autocomplete="email"></label>
+  <label>County<select name="county" required><option value="">Choose county</option>{% for county in counties %}<option>{{ county }}</option>{% endfor %}</select></label>
+  <label>Town<input required name="town" autocomplete="address-level2"></label>
+  <label>Delivery notes<textarea name="delivery_notes" rows="3"></textarea></label>
+  <fieldset><legend>Payment method</legend><label><input type="radio" name="payment_method" value="MPESA" checked> M-Pesa</label><label><input type="radio" name="payment_method" value="CARD"> Card</label><label><input type="radio" name="payment_method" value="COD"> Cash on delivery</label></fieldset>
+  <button class="button full">Place order</button>
+ </form>
+ <aside class="summary"><h2>Summary</h2>{% for product,quantity in lines %}<p>{{ product.name }} × {{ quantity }} <b>KES {% widthratio product.price_kes 1 quantity %}</b></p>{% endfor %}<hr><p>Subtotal <b>KES {{ subtotal }}</b></p><p>Delivery <b>KES {{ delivery }}</b></p><h2>Total KES {{ total }}</h2></aside>
+</section>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Agrofields Planet | Precision agriculture. Better returns.{% endblock %}
+{% block description %}Meet AgroVivo: precision crop nutrition and protection from Agrofields Planet Ltd. Explore our products, crop programmes and practical support for growers.{% endblock %}
+{% block content %}
+<section class="hero-home">
+ <div class="hero-photo" role="img" aria-label="Productive avocado orchard in Kenya"></div>
+ <div class="hero-shade"></div>
+ <div class="hero-copy">
+  <span class="eyebrow light-eyebrow"><i></i> FROM THE FARM TO YOUR PHONE</span>
+  <h1>Precision agriculture.<br><em>Better returns.</em></h1>
+  <p>Purpose-driven crop nutrition and protection for a more productive planet.</p>
+  <div class="actions"><a class="button button-light" href="{% url 'products' %}">Explore AgroVivo <span>↗</span></a><a class="text-link light-link" href="{% url 'about' %}">Meet Agrofields <span>→</span></a></div>
+ </div>
+ <div class="hero-note"><span>01 / 03</span><span>GROWING FARMERS.<br>RESTORING AGRICULTURE.</span></div>
+ <a class="scroll-cue" href="#our-approach"><span></span> Scroll to explore</a>
+</section>
+
+<section id="our-approach" class="intro-band">
+ <div class="intro-statement"><span class="eyebrow">ROOTED IN FIELD EXPERIENCE</span><h2>Every product must have a purpose.<br><em>Every application must create value.</em></h2></div>
+ <div class="intro-copy"><p>For more than 20 years, we’ve listened to farmers and learned from the realities of the field. Today, we bring practical experience together with precision nutrition, crop protection and digital access.</p><a class="under-link" href="{% url 'difference' %}">Discover our approach <span>↗</span></a></div>
+</section>
+
+<section class="focus-section">
+ <div class="section-top"><div><span class="eyebrow">WHAT WE DO</span><h2>Better inputs.<br><em>Stronger growing systems.</em></h2></div><p>We select solutions for real crop needs and support farmers with useful knowledge at every stage.</p></div>
+ <div class="focus-grid">
+  <a href="{% url 'products' %}" class="focus-card focus-nutrition"><span class="focus-number">01</span><div><span class="eyebrow light-eyebrow">AGROVIVO RANGE</span><h3>Precision crop<br>nutrition</h3><span class="circle-arrow">↗</span></div><small>Feed the crop according to its needs.</small></a>
+  <a href="{% url 'difference' %}" class="focus-card focus-protection"><span class="focus-number">02</span><div><span class="eyebrow light-eyebrow">HEALTHIER CROPS</span><h3>Purposeful crop<br>protection</h3><span class="circle-arrow">↗</span></div><small>Protect productivity with technical care.</small></a>
+  <a href="{% url 'programmes' %}" class="focus-card focus-support"><span class="focus-number">03</span><div><span class="eyebrow light-eyebrow">FIELD TO PHONE</span><h3>Practical farmer<br>support</h3><span class="circle-arrow">↗</span></div><small>Useful guidance, close to the grower.</small></a>
+ </div>
+</section>
+
+<section class="range-section">
+ <div class="range-image"></div><div class="range-copy"><span class="eyebrow">MEET OUR FLAGSHIP RANGE</span><h2>Grow through<br><em>every stage.</em></h2><p>AgroVivo brings crop solutions together in a clear performance journey: from building the canopy to setting, sizing and finishing the fruit.</p><a class="button button-green" href="{% url 'programmes' %}">Explore crop programmes <span>↗</span></a></div>
+ <div class="range-stages"><span>01 <b>Build the canopy</b></span><span>02 <b>Set the fruit</b></span><span>03 <b>Build strong fruit</b></span><span>04 <b>Bulk the fruit</b></span></div>
+</section>
+
+<section class="products-section">
+ <div class="section-top"><div><span class="eyebrow">SELECTED WITH PURPOSE</span><h2>Solutions for the<br><em>work crops do.</em></h2></div><a class="under-link" href="{% url 'products' %}">View all AgroVivo products <span>↗</span></a></div>
+ <div class="product-grid">{% for product in featured_products %}<article class="product-card">
+  <a class="product-visual" href="{{ product.get_absolute_url }}">{% if product.images %}<img src="{{ product.images.0 }}" alt="{{ product.name }} crop nutrition product" loading="lazy">{% else %}<img src="/static/images/farm-photos/IMG-20261024-WA0042.jpg" alt="" loading="lazy">{% endif %}<span class="product-stage">{{ product.get_stage_display }}</span></a>
+  <div class="product-info"><span class="eyebrow">{{ product.farmer_focus }}</span><h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3><p>{{ product.primary_role }}</p><div class="product-bottom"><b>KES {{ product.price_kes }}</b><a href="{{ product.get_absolute_url }}" aria-label="View {{ product.name }}">↗</a></div></div>
+ </article>{% empty %}<p>Our featured products are being prepared. <a href="{% url 'products' %}">Browse the catalogue</a>.</p>{% endfor %}</div>
+</section>
+
+<section class="field-story">
+ <div class="field-story-image"></div><div class="field-story-copy"><span class="eyebrow light-eyebrow">FARMER FIRST, ALWAYS</span><h2>We understand<br>what's at stake.</h2><p>Every input is an investment. Every crop is a season of hope, work and risk. We’re committed to helping farmers make better decisions with reliable products, clear guidance and support that stays close to the field.</p><a class="text-link light-link" href="{% url 'about' %}">Our commitment to farmers <span>→</span></a><div class="stat"><b>20<sup>+</sup></b><span>years of practical<br>field experience</span></div></div>
+</section>
+
+<section class="crop-section"><div class="section-top"><div><span class="eyebrow">GROW WHAT YOU GROW</span><h2>Solutions begin<br><em>with your crop.</em></h2></div><p>Explore stage-based programmes shaped around the crops farmers grow across Kenya.</p></div><div class="crop-tiles">{% for programme in programmes %}<a href="{% url 'programme_detail' programme.slug %}" class="crop-tile crop-{{ forloop.counter }}"><span>AGROVIVO PROGRAMME</span><b>{{ programme.crop_name }}</b><i>↗</i></a>{% empty %}<a href="{% url 'programmes' %}" class="crop-tile crop-1"><span>AGROVIVO PROGRAMME</span><b>Explore all crops</b><i>↗</i></a>{% endfor %}</div><a class="under-link" href="{% url 'programmes' %}">See all crop programmes <span>↗</span></a></section>
+
+<section class="closing-cta"><div><span class="eyebrow light-eyebrow">LET'S GROW SOMETHING GOOD</span><h2>Have a crop question?<br><em>We’re here to help.</em></h2></div><a class="button button-light" href="https://wa.me/254713324298">Talk to an agronomist <span>↗</span></a></section>
+{% endblock %}

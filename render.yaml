@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: agrofields-planet
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate && gunicorn agrofields_planet.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /healthz
+    initialDeployHook: python manage.py seed_products
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: agrofields-planet.onrender.com
+      - key: DATABASE_URL
+        sync: false
