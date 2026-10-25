@@ -28,11 +28,16 @@ PRODUCT_IMAGES={
 CROPS=["Tomato","Avocado","French Beans","Potatoes","Onions","Roses","Cereals"]
 class Command(BaseCommand):
  help="Seed the 11 AgroVivo products and seven crop programme outlines."
+ def add_arguments(self,parser):
+  parser.add_argument("--force",action="store_true",help="Update existing catalog records from the seed data.")
  def handle(self,*args,**options):
+  save_product=Product.objects.update_or_create if options["force"] else Product.objects.get_or_create
   for i,(name,focus,role,form,stage,benefits) in enumerate(PRODUCTS):
    photo=PRODUCT_IMAGES.get(name)
-   Product.objects.update_or_create(slug=slugify(name),defaults={"name":name,"farmer_focus":focus,"primary_role":role,"purpose":f"{role} as part of a stage-based crop nutrition programme.","formulation":form,"stage":stage,"key_benefits":benefits,"best_for":["Crop establishment","Active growth","Production"],"crops":CROPS,"images":[f"/static/images/product-photos/{photo}"] if photo else [],"price_kes":[1200,1650,1450,2200,1850,1800,1350,2400,2100,1100,1900][i],"stock":50,"featured":i in (0,3,5,7),"active":True})
+   save_product(slug=slugify(name),defaults={"name":name,"farmer_focus":focus,"primary_role":role,"purpose":f"{role} as part of a stage-based crop nutrition programme.","formulation":form,"stage":stage,"key_benefits":benefits,"best_for":["Crop establishment","Active growth","Production"],"crops":CROPS,"images":[f"/static/images/product-photos/{photo}"] if photo else [],"price_kes":[1200,1650,1450,2200,1850,1800,1350,2400,2100,1100,1900][i],"stock":50,"featured":i in (0,3,5,7),"active":True})
   for crop in CROPS:
    stages=[{"stage":stage,"products":[p[0] for p in PRODUCTS if p[4]==stage],"objective":f"Support {stage.lower().replace('_',' ')} for {crop}."} for stage in dict.fromkeys(p[4] for p in PRODUCTS)]
-   CropProgramme.objects.update_or_create(slug=slugify(crop),defaults={"crop_name":crop,"stages":stages})
-  self.stdout.write(self.style.SUCCESS("Seeded 11 products and 7 crop programmes. Prices are placeholders; confirm before launch."))
+   save_programme=CropProgramme.objects.update_or_create if options["force"] else CropProgramme.objects.get_or_create
+   save_programme(slug=slugify(crop),defaults={"crop_name":crop,"stages":stages})
+  action="Updated or created" if options["force"] else "Ensured"
+  self.stdout.write(self.style.SUCCESS(f"{action} 11 products and 7 crop programmes. Prices are placeholders; confirm before launch."))

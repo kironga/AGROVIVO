@@ -13,7 +13,7 @@ All 11 product prices are illustrative KES placeholders. Confirm prices, stock, 
 
 ## Included now
 
-Responsive corporate and catalogue pages, 11-product and seven-crop seed command, Django admin, session cart, validated checkout, stock checks, order records, customer login/order history, contact form, sitemap and robots endpoint, WhatsApp CTA, Dockerfile and environment template. M-Pesa is simulated only in DEBUG. Production payment endpoints deliberately return unavailable until a real Daraja STK client and Stripe Checkout/webhook verification are configured.
+Responsive corporate and catalogue pages, 11-product and seven-crop seed command, Django admin, session cart, validated checkout, stock checks, order records, customer login/order history, contact form, sitemap and robots endpoint, WhatsApp CTA, Dockerfile and environment template. M-Pesa is simulated only in DEBUG. Production payment endpoints deliberately return unavailable until a real Daraja STK client and Stripe Checkout/webhook verification are configured. The Render start command ensures missing seed catalog records are created at startup without overwriting existing catalog edits; use `python manage.py seed_products --force` to reapply seed values intentionally.
 
 ## Frontend image assets
 
