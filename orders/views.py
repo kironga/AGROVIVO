@@ -23,8 +23,24 @@ def checkout(request):
   messages.info(request,"Your cart is empty.")
   return redirect("products")
  delivery=0 if subtotal>=10000 else 350
+ profile=getattr(request.user,"customer_profile",None)
+ saved_order=request.user.orders.order_by("-created_at").first()
+ checkout_values={
+  "name":request.user.get_full_name(),
+  "phone":profile.phone if profile else "",
+  "email":request.user.email,
+  "county":saved_order.county if saved_order else "",
+  "town":saved_order.town if saved_order else "",
+  "delivery_area":saved_order.delivery_area if saved_order else "",
+  "delivery_address":saved_order.delivery_address if saved_order else "",
+  "landmark":saved_order.landmark if saved_order else "",
+  "delivery_notes":"",
+  "payment_method":"MPESA",
+ }
  if request.method=="POST":
   data=request.POST
+  checkout_values={key:data.get(key,"").strip() for key in checkout_values}
+  checkout_values["payment_method"] = checkout_values["payment_method"] or "MPESA"
   phone=re.sub(r"[\s()-]","",data.get("phone",""))
   if re.fullmatch(r"07\d{8}",phone):
    phone="+254"+phone[1:]
@@ -52,8 +68,7 @@ def checkout(request):
    if method=="MPESA": return redirect("mpesa_start",order_number=order.order_number)
    if method=="CARD": return redirect("stripe_start",order_number=order.order_number)
    return redirect("confirmation",order_number=order.order_number)
- profile=getattr(request.user,"customer_profile",None)
- return render(request,"orders/checkout.html",{"lines":lines,"subtotal":subtotal,"delivery":delivery,"total":subtotal+delivery,"counties":COUNTIES,"profile":profile})
+ return render(request,"orders/checkout.html",{"lines":lines,"subtotal":subtotal,"delivery":delivery,"total":subtotal+delivery,"counties":COUNTIES,"profile":profile,"checkout_values":checkout_values,"delivery_remaining":max(0,10000-subtotal)})
 def confirmation(request,order_number):
  order=get_object_or_404(Order,order_number=order_number)
  if order.user_id and request.user!=order.user: return redirect("home")

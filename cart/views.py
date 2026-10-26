@@ -9,7 +9,8 @@ def cart_page(request):
  items=CartItem.objects.filter(user=request.user,product__active=True).select_related("product") if request.user.is_authenticated else []
  lines=[{"product":item.product,"quantity":item.quantity,"line_total":item.product.price_kes*item.quantity} for item in items]
  subtotal=sum(line["line_total"] for line in lines)
- return render(request,"cart/cart.html",{"lines":lines,"subtotal":subtotal,"delivery_threshold":10000})
+ threshold=10000
+ return render(request,"cart/cart.html",{"lines":lines,"subtotal":subtotal,"delivery_threshold":threshold,"delivery":0 if subtotal>=threshold else 350,"delivery_remaining":max(0,threshold-subtotal),"delivery_progress":min(100,int(subtotal*100/threshold)) if subtotal else 0,"cart_count":sum(line["quantity"] for line in lines)})
 @require_POST
 def add_to_cart(request,product_id):
  product=get_object_or_404(Product,pk=product_id,active=True)

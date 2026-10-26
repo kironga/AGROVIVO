@@ -21,7 +21,19 @@ def account(request):
     if request.user.is_staff:
         return redirect("dashboard_home")
     profile = CustomerProfile.objects.filter(user=request.user).first()
-    return render(request, "accounts/account.html", {"profile": profile, "orders": request.user.orders.prefetch_related("items__product").order_by("-created_at")})
+    orders = request.user.orders.prefetch_related("items__product").order_by("-created_at")
+    cart_items = CartItem.objects.filter(user=request.user, product__active=True).select_related("product")
+    cart_total = sum(item.product.price_kes * item.quantity for item in cart_items)
+    return render(request, "accounts/account.html", {
+        "profile": profile,
+        "orders": orders[:6],
+        "order_count": orders.count(),
+        "active_order_count": orders.exclude(status__in=["DELIVERED", "CANCELLED"]).count(),
+        "cart_items": cart_items[:3],
+        "cart_count": sum(item.quantity for item in cart_items),
+        "cart_total": cart_total,
+        "latest_order": orders.first(),
+    })
 
 
 def register(request):

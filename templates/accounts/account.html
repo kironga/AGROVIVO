@@ -1,12 +1,29 @@
 {% extends "base.html" %}
-{% block title %}My Account{% endblock %}
+{% load static %}
+{% block title %}My AgroVivo | Customer dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'customer.css' %}">{% endblock %}
 {% block content %}
-<section class="section">
- <p class="eyebrow">MY AGROFIELDS</p>
- <h1>Welcome, {{ request.user.get_short_name|default:request.user.username }}</h1>
- <p>{{ request.user.email }}{% if profile %} · {{ profile.phone }}{% endif %}</p>
- <h2>Your orders</h2>
- {% for order in orders %}<article class="cart-line"><div><b>{{ order.order_number }}</b><p>{{ order.created_at|date:"j M Y" }}</p></div><span>{{ order.get_status_display }}</span><b>KES {{ order.total_kes }}</b></article>
- {% empty %}<p>No orders yet. <a href="{% url 'products' %}">Browse products</a>.</p>{% endfor %}
+<section class="customer-dashboard">
+ <div class="customer-welcome"><div><span class="customer-overline">MY AGROFIELDS · CUSTOMER DASHBOARD</span><h1>Hello, {{ request.user.first_name|default:request.user.username }}<span>.</span></h1><p>Keep your orders, cart and delivery details together in one place.</p></div><div class="welcome-actions"><a class="customer-button customer-button-light" href="{% url 'products' %}">Explore products <span>→</span></a><a class="welcome-cart" href="{% url 'cart' %}"><span class="welcome-cart-icon">▤</span><span>My cart<small>{{ cart_count }} item{{ cart_count|pluralize }}</small></span><b>{{ cart_count }}</b></a></div></div>
+ <nav class="customer-tabs" aria-label="Customer dashboard sections"><a class="is-active" href="#overview">Overview</a><a href="#orders">My orders <span>{{ order_count }}</span></a><a href="#saved-cart">Saved cart <span>{{ cart_count }}</span></a><a href="#delivery">Delivery details</a></nav>
+ <div id="overview" class="customer-stats"><article><span class="customer-stat-icon">▤</span><div><small>All orders</small><b>{{ order_count }}</b><p>Placed with AgroVivo</p></div></article><article><span class="customer-stat-icon">◷</span><div><small>In progress</small><b>{{ active_order_count }}</b><p>Being prepared or delivered</p></div></article><article><span class="customer-stat-icon">▣</span><div><small>Cart items</small><b>{{ cart_count }}</b><p>{% if cart_count %}KES {{ cart_total }} subtotal{% else %}Ready for your next order{% endif %}</p></div></article></div>
+ <div class="customer-grid">
+  <section class="customer-panel" id="orders"><div class="customer-panel-heading"><div><span class="customer-overline">ORDER HISTORY</span><h2>Your orders</h2><p>Updates on the products coming your way.</p></div>{% if order_count %}<a href="#orders">See recent orders <span>→</span></a>{% endif %}</div>
+   {% for order in orders %}<article class="customer-order"><div class="customer-order-top"><div><small>ORDER · {{ order.created_at|date:"j M Y" }}</small><b>{{ order.order_number }}</b></div><span class="order-badge order-{{ order.status|lower }}">{{ order.get_status_display }}</span></div><div class="order-preview">{% for item in order.items.all|slice:":3" %}<span>{{ item.product.name }} <b>× {{ item.quantity }}</b></span>{% endfor %}{% if order.items.count > 3 %}<small>and {{ order.items.count|add:"-3" }} more</small>{% endif %}</div><div class="customer-order-bottom"><span>Delivering to <b>{{ order.town }}, {{ order.county }}</b></span><strong>KES {{ order.total_kes }}</strong></div><a class="customer-order-link" href="{% url 'confirmation' order.order_number %}">View order details <b>→</b></a></article>
+   {% empty %}<div class="customer-empty"><span>✳</span><h3>Your first order starts here</h3><p>Explore our crop nutrition and protection range and find the right fit for your farm.</p><a href="{% url 'products' %}" class="customer-text-link">Browse AgroVivo products <b>→</b></a></div>{% endfor %}
+  </section>
+  <aside class="customer-side-column">
+   <section class="customer-panel" id="saved-cart"><div class="customer-panel-heading"><div><span class="customer-overline">READY WHEN YOU ARE</span><h2>Your cart</h2></div><a href="{% url 'cart' %}">Open cart <span>→</span></a></div>
+    {% for item in cart_items %}<article class="mini-cart-item">{% if item.product.images.0 %}<img src="{{ item.product.images.0 }}" alt="{{ item.product.name }}">{% else %}<span class="mini-cart-placeholder">AV</span>{% endif %}<div><b>{{ item.product.name }}</b><small>{{ item.quantity }} × KES {{ item.product.price_kes }}</small></div><strong>KES {% widthratio item.product.price_kes 1 item.quantity %}</strong></article>
+    {% empty %}<p class="customer-muted">Your cart is empty. Add products and they’ll be saved here.</p>{% endfor %}
+    {% if cart_count %}<div class="mini-cart-total"><span>Cart subtotal</span><b>KES {{ cart_total }}</b></div><a class="customer-button customer-button-green customer-button-wide" href="{% url 'cart' %}">Review cart <span>→</span></a>{% else %}<a class="customer-text-link" href="{% url 'products' %}">Find products <b>→</b></a>{% endif %}
+   </section>
+   <section class="customer-panel customer-delivery-panel" id="delivery"><div class="customer-panel-heading"><div><span class="customer-overline">SHIPPING</span><h2>Delivery details</h2></div><span class="pin-icon">⌖</span></div>
+    {% if latest_order %}<p class="customer-muted">Your latest delivery location</p><address><b>{{ latest_order.delivery_address }}</b><span>{{ latest_order.delivery_area }}{% if latest_order.delivery_area %}, {% endif %}{{ latest_order.town }}, {{ latest_order.county }}</span>{% if latest_order.landmark %}<small>Near {{ latest_order.landmark }}</small>{% endif %}</address><a class="customer-text-link" href="{% url 'checkout' %}">Use or update at checkout <b>→</b></a>
+    {% else %}<p class="customer-muted">Add your delivery location at checkout. We’ll save it with your order so our team knows where to ship.</p><a class="customer-text-link" href="{% url 'products' %}">Start shopping <b>→</b></a>{% endif %}
+   </section>
+  </aside>
+ </div>
+ <div class="customer-support"><span>Need help with an order?</span><a href="https://wa.me/254713324298">Chat with our customer team <b>↗</b></a></div>
 </section>
 {% endblock %}
