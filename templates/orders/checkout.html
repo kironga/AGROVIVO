@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Checkout | Agrofields Planet{% endblock %}
 {% block content %}
-<section class="page-hero compact"><p class="eyebrow">SECURE CHECKOUT</p><h1>Delivery details</h1><p>Free delivery for orders over KES 10,000. Otherwise KES 350.</p></section>
+<section class="page-hero compact"><p class="eyebrow">SECURE CHECKOUT</p><h1>Delivery details</h1><p>Tell us exactly where to deliver. Free delivery for orders over KES 10,000; otherwise KES 350.</p></section>
 <section class="section checkout-layout">
  <form method="post" class="form-card">{% csrf_token %}
-  <label>Full name<input required name="name" autocomplete="name"></label>
-  <label>Phone number<input required name="phone" type="tel" placeholder="0712345678 or +254712345678" pattern="(?:07[0-9]{8}|\+?2547[0-9]{8})" maxlength="13" autocomplete="tel" aria-describedby="phone-help"><small id="phone-help">Enter a number starting with 07 or +2547.</small></label>
-  <label>Email (optional)<input name="email" type="email" autocomplete="email"></label>
+  <h2>Contact information</h2>
+  <label>Full name<input required name="name" autocomplete="name" value="{{ request.user.get_full_name }}"></label>
+  <label>Phone number<input required name="phone" type="tel" placeholder="0712345678 or +254712345678" pattern="(?:07[0-9]{8}|\+?2547[0-9]{8})" maxlength="13" autocomplete="tel" value="{{ profile.phone|default:'' }}" aria-describedby="phone-help"><small id="phone-help">Enter a number starting with 07 or +2547.</small></label>
+  <label>Email<input required name="email" type="email" autocomplete="email" value="{{ request.user.email }}"></label>
+  <h2>Where should we deliver?</h2>
   <label>County<select name="county" required><option value="">Choose county</option>{% for county in counties %}<option>{{ county }}</option>{% endfor %}</select></label>
-  <label>Town<input required name="town" autocomplete="address-level2"></label>
-  <label>Delivery notes<textarea name="delivery_notes" rows="3"></textarea></label>
+  <label>Town<input required name="town" autocomplete="address-level2" placeholder="e.g. Thika"></label>
+  <label>Estate, village or area<input name="delivery_area" autocomplete="address-line1" placeholder="e.g. Makongeni"></label>
+  <label>Specific delivery address<input required name="delivery_address" placeholder="Building, road, plot or delivery point"></label>
+  <label>Nearby landmark (optional)<input name="landmark" placeholder="e.g. Opposite the market"></label>
+  <label>Extra delivery instructions<textarea name="delivery_notes" rows="3" placeholder="Anything the rider should know"></textarea></label>
   <fieldset><legend>Payment method</legend><label><input type="radio" name="payment_method" value="MPESA" checked> M-Pesa</label><label><input type="radio" name="payment_method" value="CARD"> Card</label><label><input type="radio" name="payment_method" value="COD"> Cash on delivery</label></fieldset>
   <button class="button full">Place order</button>
  </form>

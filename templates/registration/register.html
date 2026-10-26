@@ -1,14 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Create your AgroVivo account{% endblock %}
+{% load static %}
+{% block title %}Create an account | Agrofields Planet{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'auth.css' %}">{% endblock %}
 {% block content %}
-<section class="section form-wrap">
- <form method="post" class="form-card">
-  <h1>Create your account</h1>
-  <p>Enter your name, email and Kenyan phone number. We’ll send separate verification codes to your email and phone.</p>
-  {% csrf_token %}{{ form.as_p }}
-  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-  <button class="button" type="submit">Send verification codes</button>
-  <p>Already registered? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>.</p>
- </form>
+<section class="auth-page">
+ <div class="auth-card auth-card-register">
+  <div class="auth-aside auth-aside-register"><span class="auth-mark">AGROVIVO · MY AGROFIELDS</span><div><p class="auth-aside-kicker">GROW WITH CONFIDENCE</p><h2>Everything you need<br>for a <em>better harvest.</em></h2><p>Create your customer account to save your cart, place orders and keep your delivery details together.</p><ul><li><span>01</span> Browse the full product range</li><li><span>02</span> Save items in your personal cart</li><li><span>03</span> Track your orders in one place</li></ul></div><span class="auth-aside-foot">PRECISION AGRICULTURE · KENYA</span></div>
+  <div class="auth-main">
+   <nav class="auth-tabs" aria-label="Account access"><a class="auth-tab" href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a><a class="auth-tab is-active" aria-current="page" href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create account</a></nav>
+   <div class="auth-heading"><span class="eyebrow">JOIN AGROVIVO</span><h1>Create your account</h1><p>It takes a minute. No email or SMS verification code is needed.</p></div>
+   <form method="post" class="auth-form" novalidate>
+    {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    {% if form.non_field_errors %}<div class="auth-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="auth-name-grid">
+     <div class="auth-field"><label for="{{ form.first_name.id_for_label }}">First name</label>{{ form.first_name }}{% for error in form.first_name.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+     <div class="auth-field"><label for="{{ form.last_name.id_for_label }}">Last name</label>{{ form.last_name }}{% for error in form.last_name.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+    </div>
+    <div class="auth-field"><label for="{{ form.email.id_for_label }}">Email address <span>Used to sign in</span></label>{{ form.email }}{% for error in form.email.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+    <div class="auth-field"><label for="{{ form.phone.id_for_label }}">Phone number</label>{{ form.phone }}{% for error in form.phone.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}<small class="auth-help">Kenyan mobile number, for example 0712345678.</small></div>
+    <div class="auth-field"><label for="{{ form.password.id_for_label }}">Password</label>{{ form.password }}{% for error in form.password.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}<small class="auth-help">Use at least 8 characters and avoid common passwords.</small></div>
+    <div class="auth-field"><label for="{{ form.password_confirm.id_for_label }}">Confirm password</label>{{ form.password_confirm }}{% for error in form.password_confirm.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+    <button class="auth-submit" type="submit">Create my account <span aria-hidden="true">→</span></button>
+   </form>
+   <p class="auth-bottom">Already have an account? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a></p>
+   <p class="auth-note"><span aria-hidden="true">✓</span> You’ll be signed in as soon as your account is created.</p>
+  </div>
+ </div>
 </section>
 {% endblock %}

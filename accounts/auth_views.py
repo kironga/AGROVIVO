@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.urls import reverse
 
 from catalog.models import Product
+from cart.models import CartItem
 
 
 class StaffAwareLoginView(LoginView):
@@ -17,7 +18,6 @@ class StaffAwareLoginView(LoginView):
     def form_valid(self, form):
         response = super().form_valid(form)
         pending = self.request.session.pop("pending_cart_add", {})
-        cart = self.request.session.get("cart", {})
         added = False
         unavailable = False
         for product_id, requested in pending.items():
@@ -27,16 +27,16 @@ class StaffAwareLoginView(LoginView):
                 continue
             try:
                 requested = max(1, min(50, int(requested)))
-                current = max(0, int(cart.get(str(product.pk), 0)))
+                existing = CartItem.objects.filter(user=self.request.user, product=product).first()
+                current = existing.quantity if existing else 0
             except (TypeError, ValueError):
                 requested, current = 1, 0
             quantity = min(product.stock, current + requested)
             if quantity > current:
-                cart[str(product.pk)] = quantity
+                CartItem.objects.update_or_create(user=self.request.user, product=product, defaults={"quantity": quantity})
                 added = True
             else:
                 unavailable = True
-        self.request.session["cart"] = cart
         if added:
             messages.success(self.request, "Your selected product has been added to your cart.")
         if unavailable:

@@ -1,5 +1,8 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import user_passes_test
+from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -10,6 +13,11 @@ from catalog.models import CropStage, Product
 from orders.models import Order, OrderStatus
 
 from .dashboard_forms import OrderAdminForm, ProductAdminForm
+from accounts.forms import AdminSetPasswordForm, AdminUserCreateForm
+from accounts.models import CustomerProfile
+
+User = get_user_model()
+superuser_required = user_passes_test(lambda user: user.is_authenticated and user.is_superuser)
 
 
 @staff_member_required
@@ -95,3 +103,45 @@ def order_detail(request, order_id):
         messages.success(request, f"Order {order.order_number} has been updated.")
         return redirect("dashboard_order_detail", order_id=order.pk)
     return render(request, "dashboard/order_detail.html", {"order": order, "form": form})
+
+
+@superuser_required
+def user_list(request):
+    query = request.GET.get("q", "").strip()
+    users = User.objects.all().order_by("-date_joined")
+    if query:
+        users = users.filter(Q(username__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query))
+    return render(request, "dashboard/users.html", {"users": users, "query": query, "customer_count": User.objects.filter(is_staff=False).count(), "staff_count": User.objects.filter(is_staff=True).count()})
+
+
+@superuser_required
+def user_create(request):
+    form = AdminUserCreateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        data = form.cleaned_data
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=data["email"], email=data["email"],
+                first_name=data["first_name"].strip(), last_name=data["last_name"].strip(),
+                password=data["password"], is_staff=(data["role"] == "staff"),
+            )
+            if data["role"] == "customer":
+                CustomerProfile.objects.create(user=user, phone=data["phone"])
+        messages.success(request, f"{data['role'].title()} account created for {user.get_full_name()}.")
+        return redirect("dashboard_users")
+    return render(request, "dashboard/user_form.html", {"form": form, "page_title": "Create a user"})
+
+
+@superuser_required
+def user_password_reset(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+    if target.is_superuser and target.pk == request.user.pk:
+        messages.info(request, "Use your own account password reset flow to change your administrator password.")
+        return redirect("dashboard_users")
+    form = AdminSetPasswordForm(request.POST or None, user=target)
+    if request.method == "POST" and form.is_valid():
+        target.set_password(form.cleaned_data["password"])
+        target.save(update_fields=["password"])
+        messages.success(request, f"Password updated for {target.get_full_name() or target.email}. Share the new password with them securely.")
+        return redirect("dashboard_users")
+    return render(request, "dashboard/user_password.html", {"form": form, "target_user": target})

@@ -1,14 +1,24 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Sign in | Agrofields Planet{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'auth.css' %}">{% endblock %}
 {% block content %}
-<section class="section form-wrap">
- <form method="post" class="form-card">
-  <h1>Sign in</h1>
-  {% csrf_token %}{{ form.as_p }}
-  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-  <button class="button" type="submit">Sign in</button>
-  <p><a href="{% url 'customer_password_reset' %}">Forgot your password?</a></p>
-  <p>New here? <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a>.</p>
- </form>
+<section class="auth-page">
+ <div class="auth-card">
+  <div class="auth-aside auth-aside-login"><span class="auth-mark">AGROVIVO · MY AGROFIELDS</span><div><p class="auth-aside-kicker">GOOD TO SEE YOU</p><h2>Your farm,<br><em>within reach.</em></h2><p>Sign in to manage your cart, follow orders and get the products you need for your next growing season.</p></div><span class="auth-aside-foot">PRECISION AGRICULTURE · KENYA</span></div>
+  <div class="auth-main">
+   <nav class="auth-tabs" aria-label="Account access"><a class="auth-tab is-active" aria-current="page" href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a><a class="auth-tab" href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create account</a></nav>
+   <div class="auth-heading"><span class="eyebrow">WELCOME BACK</span><h1>Sign in to your account</h1><p>Use the email address and password for your AgroVivo account.</p></div>
+   <form method="post" class="auth-form" novalidate>
+    {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    {% if form.non_field_errors %}<div class="auth-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="auth-field"><label for="{{ form.username.id_for_label }}">Email or username</label>{{ form.username }}{% for error in form.username.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+    <div class="auth-field"><div class="auth-label-row"><label for="{{ form.password.id_for_label }}">Password</label><a href="{% url 'customer_password_reset' %}">Forgot password?</a></div>{{ form.password }}{% for error in form.password.errors %}<small class="auth-error">{{ error }}</small>{% endfor %}</div>
+    <button class="auth-submit" type="submit">Sign in <span aria-hidden="true">→</span></button>
+   </form>
+   <p class="auth-bottom">New to AgroVivo? <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create a customer account</a></p>
+   <p class="auth-note"><span aria-hidden="true">✓</span> Your account is protected. We never show your password.</p>
+  </div>
+ </div>
 </section>
 {% endblock %}

@@ -81,3 +81,65 @@ class SetNewPasswordForm(forms.Form):
         if cleaned.get("password") and cleaned.get("password_confirm") and cleaned["password"] != cleaned["password_confirm"]:
             self.add_error("password_confirm", "The passwords do not match.")
         return cleaned
+
+
+class AdminUserCreateForm(forms.Form):
+    ROLE_CHOICES = (("customer", "Customer"), ("staff", "Staff"))
+    role = forms.ChoiceField(choices=ROLE_CHOICES)
+    first_name = forms.CharField(max_length=150)
+    last_name = forms.CharField(max_length=150)
+    email = forms.EmailField(max_length=150)
+    phone = forms.CharField(max_length=16, required=False, help_text="Required for customer accounts.")
+    password = forms.CharField(widget=forms.PasswordInput, min_length=8)
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exists() or User.objects.filter(username__iexact=email).exists():
+            raise forms.ValidationError("An account already uses this email.")
+        return email
+
+    def clean_phone(self):
+        phone = re.sub(r"[\s()-]", "", self.cleaned_data.get("phone", ""))
+        if not phone:
+            return ""
+        if re.fullmatch(r"07\d{8}", phone):
+            phone = "+254" + phone[1:]
+        elif re.fullmatch(r"2547\d{8}", phone):
+            phone = "+" + phone
+        if not re.fullmatch(r"\+2547\d{8}", phone):
+            raise forms.ValidationError("Enter a Kenyan mobile number, for example 0712345678.")
+        if CustomerProfile.objects.filter(phone=phone).exists():
+            raise forms.ValidationError("An account already uses this phone number.")
+        return phone
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("role") == "customer" and not cleaned.get("phone"):
+            self.add_error("phone", "A phone number is required for customer accounts.")
+        if cleaned.get("password") and cleaned.get("email"):
+            user = User(username=cleaned["email"], email=cleaned["email"])
+            try:
+                validate_password(cleaned["password"], user)
+            except forms.ValidationError as error:
+                self.add_error("password", error)
+        return cleaned
+
+
+class AdminSetPasswordForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput, min_length=8, label="New password")
+    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm new password")
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("password") != cleaned.get("password_confirm"):
+            self.add_error("password_confirm", "The passwords do not match.")
+        if cleaned.get("password"):
+            try:
+                validate_password(cleaned["password"], self.user)
+            except forms.ValidationError as error:
+                self.add_error("password", error)
+        return cleaned

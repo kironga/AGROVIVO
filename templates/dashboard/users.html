@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Users | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">AGROFIELDS PLANET · ADMIN</span><h1>Users</h1><p>Manage customer and staff accounts. Only administrators can create staff users.</p></div><a class="dash-primary" href="{% url 'dashboard_user_create' %}">＋ Create user</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main">
+  <div class="dash-stats"><article><span>Customer accounts</span><strong>{{ customer_count }}</strong><small>Self registered or admin created</small></article><article><span>Staff accounts</span><strong>{{ staff_count }}</strong><small>Can access store management</small></article></div>
+  <section class="dash-panel"><form class="dash-filters" method="get"><label class="search-box"><span>⌕</span><input name="q" value="{{ query }}" placeholder="Search name or email"></label><button class="dash-secondary">Search</button></form>
+   <div class="table-scroll"><table class="dash-table"><thead><tr><th>User</th><th>Role</th><th>Phone</th><th>Joined</th><th>Actions</th></tr></thead><tbody>
+   {% for user in users %}<tr><td><b>{{ user.get_full_name|default:user.email }}</b><small>{{ user.email }}</small></td><td>{% if user.is_superuser %}Administrator{% elif user.is_staff %}Staff{% else %}Customer{% endif %}</td><td>{% if user.customer_profile %}{{ user.customer_profile.phone }}{% else %}—{% endif %}</td><td>{{ user.date_joined|date:'M j, Y' }}</td><td class="table-actions"><a href="{% url 'dashboard_user_password_reset' user.pk %}">Reset password</a></td></tr>{% empty %}<tr><td colspan="5">No accounts match your search.</td></tr>{% endfor %}
+   </tbody></table></div>
+  </section>
+ </div></div>
+</section>
+{% endblock %}

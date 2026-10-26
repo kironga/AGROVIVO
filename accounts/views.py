@@ -1,21 +1,18 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model, password_validation
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model, password_validation, login
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.utils import timezone
-from urllib.parse import urlencode
+from django.utils.http import url_has_allowed_host_and_scheme
 
+from cart.models import CartItem
+from catalog.models import Product
 from .forms import DualOtpForm, EmailAddressForm, RegistrationForm, SetNewPasswordForm
 from .models import AccountVerification, CustomerProfile
 from .otp import RESEND_WAIT, issue_codes, valid_codes
 
 User = get_user_model()
-SIGNUP_SESSION_KEY = "signup_verification_id"
 RESET_SESSION_KEY = "password_reset_verification_id"
 VERIFIED_RESET_SESSION_KEY = "verified_password_reset_id"
 
@@ -31,78 +28,40 @@ def register(request):
     next_url = request.POST.get("next", request.GET.get("next", ""))
     form = RegistrationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        AccountVerification.objects.filter(expires_at__lt=timezone.now() - timedelta(days=1)).delete()
         email = form.cleaned_data["email"]
         phone = form.cleaned_data["phone"]
-        if User.objects.filter(email__iexact=email).exists() or User.objects.filter(username__iexact=email).exists():
-            form.add_error("email", "An account already uses this email. Please sign in or reset your password.")
-        elif CustomerProfile.objects.filter(phone=phone).exists():
-            form.add_error("phone", "An account already uses this phone number.")
-        else:
-            recent = AccountVerification.objects.filter(purpose=AccountVerification.Purpose.SIGNUP, email=email, created_at__gte=timezone.now() - RESEND_WAIT).first()
-            if recent:
-                form.add_error(None, "A verification code was sent recently. Check your email and phone, or wait one minute before requesting another.")
-            else:
-                AccountVerification.objects.filter(purpose=AccountVerification.Purpose.SIGNUP, email=email).delete()
-                challenge = AccountVerification.objects.create(
-                    purpose=AccountVerification.Purpose.SIGNUP,
-                    email=email,
-                    phone=phone,
-                    first_name=form.cleaned_data["first_name"].strip(),
-                    last_name=form.cleaned_data["last_name"].strip(),
-                    password_hash=make_password(form.cleaned_data["password"]),
-                    email_code_hash="pending",
-                    phone_code_hash="pending",
-                    expires_at=timezone.now(),
-                    last_sent_at=timezone.now() - RESEND_WAIT,
-                )
-                request.session[SIGNUP_SESSION_KEY] = challenge.pk
-                request.session["signup_next"] = next_url
-                delivered = issue_codes(challenge)
-                if delivered:
-                    messages.success(request, "We sent one verification code to your email and another to your phone. Enter both codes to finish creating your account.")
-                else:
-                    messages.warning(request, "Your verification request is saved, but one of the codes could not be delivered. Check the delivery settings or try resending in one minute.")
-                return redirect("signup_verify")
-    return render(request, "registration/register.html", {"form": form, "next": next_url})
-
-
-def signup_verify(request):
-    challenge = _session_challenge(request, SIGNUP_SESSION_KEY, AccountVerification.Purpose.SIGNUP)
-    if not challenge:
-        messages.info(request, "Start account creation to request new verification codes.")
-        return redirect("register")
-    form = DualOtpForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        if not valid_codes(challenge, form.cleaned_data["email_code"], form.cleaned_data["phone_code"]):
-            messages.error(request, "The codes are incorrect, expired, or have used all attempts. Request fresh codes and try again.")
-        else:
-            if User.objects.filter(email__iexact=challenge.email).exists() or User.objects.filter(username__iexact=challenge.email).exists() or CustomerProfile.objects.filter(phone=challenge.phone).exists():
-                challenge.delete()
-                request.session.pop(SIGNUP_SESSION_KEY, None)
-                messages.error(request, "That email or phone number has since been used. Please sign in or use different details.")
-                return redirect("register")
+        user = User.objects.create_user(
+            username=email, email=email,
+            first_name=form.cleaned_data["first_name"].strip(),
+            last_name=form.cleaned_data["last_name"].strip(),
+            password=form.cleaned_data["password"],
+        )
+        CustomerProfile.objects.create(user=user, phone=phone)
+        login(request, user)
+        pending = request.session.pop("pending_cart_add", {})
+        added = False
+        for product_id, requested in pending.items():
+            product = Product.objects.filter(pk=product_id, active=True).first()
+            if not product or not product.stock:
+                continue
             try:
-                with transaction.atomic():
-                    user = User.objects.create(
-                        username=challenge.email,
-                        email=challenge.email,
-                        first_name=challenge.first_name,
-                        last_name=challenge.last_name,
-                        password=challenge.password_hash,
-                    )
-                    CustomerProfile.objects.create(user=user, phone=challenge.phone, email_verified=True, phone_verified=True)
-                    challenge.delete()
-            except IntegrityError:
-                challenge.delete()
-                request.session.pop(SIGNUP_SESSION_KEY, None)
-                messages.error(request, "Those account details have already been registered. Please sign in or use another email and phone number.")
-                return redirect("register")
-            next_url = request.session.pop("signup_next", "")
-            request.session.pop(SIGNUP_SESSION_KEY, None)
-            messages.success(request, "Your email and phone are verified. Sign in with your email and password.")
-            return redirect(f"{reverse('login')}?{urlencode({'next': next_url})}" if next_url else "login")
-    return render(request, "registration/verify_otp.html", {"form": form, "purpose": "signup", "email_hint": _masked_email(challenge.email), "phone_hint": _masked_phone(challenge.phone)})
+                requested = max(1, min(50, int(requested)))
+            except (TypeError, ValueError):
+                requested = 1
+            item, _ = CartItem.objects.get_or_create(user=user, product=product, defaults={"quantity": 0})
+            item.quantity = min(product.stock, item.quantity + requested)
+            if item.quantity:
+                item.save(update_fields=["quantity", "updated_at"])
+                added = True
+            else:
+                item.delete()
+        if added:
+            messages.info(request, "The product you selected before signup is waiting in your cart.")
+        messages.success(request, "Your customer account is ready. You are now signed in.")
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            return redirect(next_url)
+        return redirect("account")
+    return render(request, "registration/register.html", {"form": form, "next": next_url})
 
 
 def password_reset_start(request):
@@ -180,14 +139,10 @@ def password_reset_new(request):
     return render(request, "registration/password_reset_new.html", {"form": form})
 
 
-def resend_otp(request, purpose):
+def resend_otp(request):
     if request.method != "POST":
-        return redirect("register")
-    if purpose == "signup":
-        session_key, target, expected = SIGNUP_SESSION_KEY, "signup_verify", AccountVerification.Purpose.SIGNUP
-    else:
-        session_key, target, expected = RESET_SESSION_KEY, "customer_password_reset_verify", AccountVerification.Purpose.PASSWORD_RESET
-    challenge = _session_challenge(request, session_key, expected)
+        return redirect("customer_password_reset")
+    challenge = _session_challenge(request, RESET_SESSION_KEY, AccountVerification.Purpose.PASSWORD_RESET)
     if challenge and challenge.created_at > timezone.now() - timedelta(days=1):
         wait_until = challenge.last_sent_at + RESEND_WAIT
         if timezone.now() < wait_until:
@@ -199,7 +154,7 @@ def resend_otp(request, purpose):
             messages.error(request, "At least one verification code could not be delivered. Check the delivery settings and try again later.")
     else:
         messages.error(request, "This verification request has expired. Start again to request new codes.")
-    return redirect(target)
+    return redirect("customer_password_reset_verify")
 
 
 def _session_challenge(request, session_key, purpose):
@@ -212,10 +167,6 @@ def _session_challenge(request, session_key, purpose):
 def _masked_email(email):
     name, separator, domain = email.partition("@")
     return f"{name[:1]}{'*' * max(1, len(name) - 1)}@{domain}" if separator else "your email"
-
-
-def _masked_phone(phone):
-    return f"{phone[:4]}{'*' * max(0, len(phone) - 7)}{phone[-3:]}"
 
 
 def _phone_from_order_history(user):

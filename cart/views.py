@@ -4,14 +4,12 @@ from django.contrib import messages
 from django.urls import reverse
 from urllib.parse import urlencode
 from catalog.models import Product
+from .models import CartItem
 def cart_page(request):
- cart=request.session.get("cart",{}) if request.user.is_authenticated else {}
- if not request.user.is_authenticated and request.session.get("cart"):
-  request.session["cart"]={}
- products=Product.objects.filter(id__in=cart.keys(),active=True)
- lines=[{"product":p,"quantity":int(cart.get(str(p.id),0))} for p in products]
- subtotal=sum(x["product"].price_kes*x["quantity"] for x in lines)
- return render(request,"cart/cart.html",{"lines":lines,"subtotal":subtotal})
+ items=CartItem.objects.filter(user=request.user,product__active=True).select_related("product") if request.user.is_authenticated else []
+ lines=[{"product":item.product,"quantity":item.quantity,"line_total":item.product.price_kes*item.quantity} for item in items]
+ subtotal=sum(line["line_total"] for line in lines)
+ return render(request,"cart/cart.html",{"lines":lines,"subtotal":subtotal,"delivery_threshold":10000})
 @require_POST
 def add_to_cart(request,product_id):
  product=get_object_or_404(Product,pk=product_id,active=True)
@@ -25,10 +23,11 @@ def add_to_cart(request,product_id):
   request.session["pending_cart_add"]=pending
   messages.info(request,"Create an account or sign in to add this product to your cart.")
   return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
- cart=request.session.get("cart",{}); key=str(product_id)
- cart[key]=min(product.stock,int(cart.get(key,0))+quantity) if product.stock else 0
- request.session["cart"]=cart
- if not cart[key]: messages.error(request,"This product is currently out of stock.")
+ item,_=CartItem.objects.get_or_create(user=request.user,product=product,defaults={"quantity":0})
+ item.quantity=min(product.stock,item.quantity+quantity) if product.stock else 0
+ if item.quantity: item.save(update_fields=["quantity","updated_at"])
+ else: item.delete()
+ if not item.quantity: messages.error(request,"This product is currently out of stock.")
  else: messages.success(request,f"{product.name} added to your cart.")
  return redirect("cart")
 @require_POST
@@ -39,15 +38,13 @@ def update_cart(request,product_id):
  product=get_object_or_404(Product,pk=product_id,active=True)
  try: quantity=max(0,min(product.stock,int(request.POST.get("quantity",1))))
  except ValueError: quantity=1
- cart=request.session.get("cart",{})
- if quantity: cart[str(product_id)]=quantity
- else: cart.pop(str(product_id),None)
- request.session["cart"]=cart
+ if quantity: CartItem.objects.update_or_create(user=request.user,product=product,defaults={"quantity":quantity})
+ else: CartItem.objects.filter(user=request.user,product=product).delete()
  return redirect("cart")
 @require_POST
 def remove_from_cart(request,product_id):
  if not request.user.is_authenticated:
   messages.info(request,"Sign in to manage your cart.")
   return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
- cart=request.session.get("cart",{}); cart.pop(str(product_id),None); request.session["cart"]=cart
+ CartItem.objects.filter(user=request.user,product_id=product_id).delete()
  return redirect("cart")
