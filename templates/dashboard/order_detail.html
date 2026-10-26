@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ order.order_number }} | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">ORDER · {{ order.created_at|date:'M j, Y · H:i' }}</span><h1>{{ order.order_number }}</h1><p>{{ order.customer_name }} · {{ order.customer_phone }}</p></div><a class="dash-secondary" href="{% url 'dashboard_orders' %}">← All orders</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main dash-order-layout">
+  <section class="dash-panel"><div class="dash-panel-head"><div><h2>Items ordered</h2><p>Order contents and price snapshot</p></div></div><div class="table-scroll"><table class="dash-table"><thead><tr><th>Product</th><th>Quantity</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>{% for item in order.items.all %}<tr><td>{{ item.product.name }}</td><td>{{ item.quantity }}</td><td>KES {{ item.unit_price_kes }}</td><td>KES {% widthratio item.quantity 1 item.unit_price_kes %}</td></tr>{% endfor %}</tbody></table></div><div class="order-totals"><p><span>Subtotal</span><b>KES {{ order.subtotal_kes }}</b></p><p><span>Delivery</span><b>KES {{ order.delivery_kes }}</b></p><p class="order-grand-total"><span>Total</span><b>KES {{ order.total_kes }}</b></p></div></section>
+  <div class="dash-order-side">
+   <section class="dash-panel"><div class="dash-panel-head"><div><h2>Update order</h2><p>Change status after confirming payment or fulfilment.</p></div></div><form class="dash-form dash-form-compact" method="post">{% csrf_token %}{% for field in form %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>{% endfor %}<button class="dash-primary" type="submit">Save changes</button></form></section>
+   <section class="dash-panel"><div class="dash-panel-head"><div><h2>Delivery details</h2><p>Customer-provided information</p></div></div><dl class="delivery-details"><dt>Customer</dt><dd>{{ order.customer_name }}</dd><dt>Email</dt><dd>{{ order.customer_email|default:'Not provided' }}</dd><dt>Phone</dt><dd>{{ order.customer_phone }}</dd><dt>Location</dt><dd>{{ order.town }}, {{ order.county }}</dd><dt>Notes</dt><dd>{{ order.delivery_notes|default:'No delivery notes' }}</dd><dt>Payment method</dt><dd>{{ order.get_payment_method_display }}</dd><dt>Payment reference</dt><dd>{{ order.payment_ref|default:'Not provided' }}</dd></dl></section>
+  </div>
+ </div></div>
+</section>
+{% endblock %}

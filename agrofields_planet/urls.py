@@ -9,6 +9,7 @@ from cart.views import cart_page,add_to_cart,update_cart,remove_from_cart
 from orders.views import checkout,confirmation
 sitemaps={"pages":StaticViewSitemap}
 urlpatterns=[
+ path("dashboard/",include("core.dashboard_urls")),
  path("healthz",lambda request:JsonResponse({"status":"ok"}),name="healthz"),
  path("admin/",admin.site.urls),path("",HomeView.as_view(),name="home"),path("about/",AboutView.as_view(),name="about"),path("difference/",DifferenceView.as_view(),name="difference"),path("resources/",ResourcesView.as_view(),name="resources"),path("partners/",PartnersView.as_view(),name="partners"),path("privacy/",LegalView.as_view(),{"title":"Privacy policy"},name="privacy"),path("terms/",LegalView.as_view(),{"title":"Terms of use"},name="terms"),path("contact/",ContactView.as_view(),name="contact"),
  path("products/",product_list,name="products"),path("products/<slug:slug>/",product_detail,name="product_detail"),

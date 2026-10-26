@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate && python manage.py seed_products && gunicorn agrofields_planet.wsgi:application --bind 0.0.0.0:$PORT
+    startCommand: python manage.py migrate && python manage.py seed_products && python manage.py bootstrap_admin && gunicorn agrofields_planet.wsgi:application --bind 0.0.0.0:$PORT
     healthCheckPath: /healthz
     initialDeployHook: python manage.py seed_products
     autoDeployTrigger: commit

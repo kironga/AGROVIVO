@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Orders | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">FULFILMENT</span><h1>Orders</h1><p>Review customer details, payment references and fulfilment status.</p></div></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main"><section class="dash-panel">
+  <form class="dash-filters" method="get"><label class="search-box"><span>⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Order number, name or phone"></label><select name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="dash-secondary" type="submit">Filter</button></form>
+  <div class="table-scroll"><table class="dash-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>{% for order in orders %}<tr><td><a class="dash-order-link" href="{% url 'dashboard_order_detail' order.pk %}">{{ order.order_number }}</a><small>{{ order.created_at|date:'M j, Y · H:i' }}</small></td><td>{{ order.customer_name }}<small>{{ order.customer_phone }}</small></td><td>{{ order.item_count }}</td><td>KES {{ order.total_kes }}</td><td>{{ order.get_payment_method_display }}</td><td><span class="status-pill status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td></tr>{% empty %}<tr><td colspan="6"><div class="dash-empty">No orders found.</div></td></tr>{% endfor %}</tbody></table></div>
+ </section></div></div>
+</section>
+{% endblock %}

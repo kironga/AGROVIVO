@@ -9,6 +9,7 @@
  <link rel="stylesheet" href="{% static 'site.css' %}">
  <link rel="stylesheet" href="{% static 'brand-pages.css' %}">
  <link rel="stylesheet" href="{% static 'sections.css' %}">
+ {% block extra_head %}{% endblock %}
 </head>
 <body>
 <header class="top">
@@ -18,6 +19,7 @@
   <a href="{% url 'products' %}">Products</a><a href="{% url 'programmes' %}">Crop programmes</a>
   <a href="{% url 'difference' %}">Our difference</a><a href="{% url 'about' %}">About</a>
   <a href="{% url 'contact' %}">Contact</a><a href="{% url 'login' %}">Account</a>
+  {% if request.user.is_staff %}<a href="{% url 'dashboard_home' %}">Dashboard</a>{% endif %}
   <a class="nav-cart" href="{% url 'cart' %}"><span aria-hidden="true">◌</span> Cart <b>{{ cart_count }}</b></a>
  </nav>
 </header>

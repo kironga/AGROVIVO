@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Products | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">CATALOGUE</span><h1>Products</h1><p>Set descriptions, prices, stock and storefront visibility.</p></div><a class="dash-primary" href="{% url 'dashboard_product_create' %}">＋ Add product</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main">
+  <section class="dash-panel">
+   <form class="dash-filters" method="get"><label class="search-box"><span>⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search products"></label><select name="status"><option value="active" {% if status == 'active' %}selected{% endif %}>Live products</option><option value="all" {% if status == 'all' %}selected{% endif %}>All products</option><option value="archived" {% if status == 'archived' %}selected{% endif %}>Archived</option></select><button class="dash-secondary" type="submit">Filter</button></form>
+   <div class="table-scroll"><table class="dash-table"><thead><tr><th>Product</th><th>Stage</th><th>Price</th><th>Stock</th><th>Storefront</th><th></th></tr></thead><tbody>
+    {% for product in products %}<tr><td><div class="product-cell">{% if product.images %}<img src="{{ product.images.0 }}" alt="">{% else %}<span class="product-placeholder">AV</span>{% endif %}<div><strong>{{ product.name }}</strong><small>{{ product.primary_role }}</small></div></div></td><td>{{ product.get_stage_display }}</td><td>KES {{ product.price_kes }}</td><td><span class="stock-count {% if product.stock <= 5 %}stock-empty{% endif %}">{{ product.stock }}</span></td><td><span class="status-pill {% if product.active %}status-live{% else %}status-archived{% endif %}">{% if product.active %}Live{% else %}Archived{% endif %}</span></td><td class="table-actions"><a href="{% url 'dashboard_product_edit' product.pk %}">Edit</a><form method="post" action="{% url 'dashboard_product_archive' product.pk %}">{% csrf_token %}<button type="submit">{% if product.active %}Archive{% else %}Publish{% endif %}</button></form></td></tr>
+    {% empty %}<tr><td colspan="6"><div class="dash-empty">No products match this filter. Add your first product to show it in the catalogue.</div></td></tr>{% endfor %}
+   </tbody></table></div>
+  </section>
+ </div></div>
+</section>
+{% endblock %}

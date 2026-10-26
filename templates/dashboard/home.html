@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Store dashboard | AgroVivo{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">AGROFIELDS PLANET · ADMIN</span><h1>Store dashboard</h1><p>Manage your catalogue, stock and incoming orders.</p></div><a class="dash-primary" href="{% url 'dashboard_product_create' %}">＋ Add product</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main">
+  <div class="dash-stats">
+   <article><span>Orders today</span><strong>{{ today_orders }}</strong><small>Received since midnight</small></article>
+   <article><span>Open orders</span><strong>{{ open_orders }}</strong><small>Awaiting payment or fulfilment</small></article>
+   <article><span>Paid order value</span><strong>KES {{ paid_revenue|floatformat:0 }}</strong><small>Paid, processing and completed</small></article>
+   <article><span>Live products</span><strong>{{ product_count }}</strong><small>Visible in the storefront</small></article>
+  </div>
+  <div class="dash-columns">
+   <section class="dash-panel"><div class="dash-panel-head"><div><h2>Recent orders</h2><p>Latest customer purchases</p></div><a href="{% url 'dashboard_orders' %}">All orders →</a></div>
+    {% if recent_orders %}<div class="table-scroll"><table class="dash-table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>{% for order in recent_orders %}<tr><td><a class="dash-order-link" href="{% url 'dashboard_order_detail' order.pk %}">{{ order.order_number }}</a><small>{{ order.created_at|date:'M j, H:i' }}</small></td><td>{{ order.customer_name }}</td><td>KES {{ order.total_kes }}</td><td><span class="status-pill status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="dash-empty">No orders yet. New customer orders will appear here.</div>{% endif %}
+   </section>
+   <section class="dash-panel"><div class="dash-panel-head"><div><h2>Stock to check</h2><p>Active products with five or fewer units</p></div><a href="{% url 'dashboard_products' %}">Catalogue →</a></div>
+    {% if low_stock %}<ul class="stock-list">{% for product in low_stock %}<li><a href="{% url 'dashboard_product_edit' product.pk %}">{{ product.name }}</a><span class="stock-count {% if not product.stock %}stock-empty{% endif %}">{{ product.stock }} left</span></li>{% endfor %}</ul>{% else %}<div class="dash-empty">All active products are above the low-stock level.</div>{% endif %}
+   </section>
+  </div>
+ </div></div>
+</section>
+{% endblock %}

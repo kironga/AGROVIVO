@@ -1,0 +1,9 @@
+<aside class="dash-sidebar">
+ <div class="dash-side-label">STORE MANAGEMENT</div>
+ <a href="{% url 'dashboard_home' %}" class="{% if request.resolver_match.url_name == 'dashboard_home' %}is-current{% endif %}"><span>⌂</span> Overview</a>
+ <a href="{% url 'dashboard_products' %}" class="{% if 'product' in request.resolver_match.url_name %}is-current{% endif %}"><span>▦</span> Products</a>
+ <a href="{% url 'dashboard_orders' %}" class="{% if 'order' in request.resolver_match.url_name %}is-current{% endif %}"><span>▤</span> Orders</a>
+ <div class="dash-side-label dash-side-lower">QUICK LINKS</div>
+ <a href="{% url 'products' %}" target="_blank" rel="noopener"><span>↗</span> View storefront</a>
+ <a href="{% url 'admin:index' %}"><span>⚙</span> Django admin</a>
+</aside>
