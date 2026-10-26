@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Customer cart | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">CUSTOMER CART · OPERATIONS</span><h1>{{ customer.get_full_name|default:customer.email }}</h1><p>{{ customer.email }}{% if customer.customer_profile %} · {{ customer.customer_profile.phone }}{% endif %}</p></div><a class="dash-secondary" href="{% url 'dashboard_carts' %}">← All carts</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main">
+  <div class="dash-panel-head"><div><h2>Saved products</h2><p>Quantity changes are limited to current product stock.</p></div></div>
+  {% for item in items %}<article class="dash-panel ops-cart-item"><div class="ops-cart-product">{% if item.product.images.0 %}<img src="{{ item.product.images.0 }}" alt="{{ item.product.name }}">{% else %}<span class="product-placeholder">AV</span>{% endif %}<div><span class="dash-eyebrow">{{ item.product.primary_role }}</span><b>{{ item.product.name }}</b><small>KES {{ item.product.price_kes }} each · {{ item.product.stock }} in stock</small></div></div><div class="ops-cart-controls"><form method="post" class="ops-quantity-form">{% csrf_token %}<input type="hidden" name="action" value="quantity"><input type="hidden" name="item_id" value="{{ item.pk }}"><label>Quantity<input type="number" name="quantity" min="0" max="{{ item.product.stock }}" value="{{ item.quantity }}"></label><button class="dash-secondary" type="submit">Update</button></form><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="item_id" value="{{ item.pk }}"><button class="ops-remove" type="submit">Remove</button></form><strong>KES {% widthratio item.product.price_kes 1 item.quantity %}</strong></div></article>
+  {% empty %}<section class="dash-panel"><div class="dash-empty">This customer’s cart is empty.</div></section>{% endfor %}
+  {% if items %}<section class="dash-panel ops-cart-total"><div><span>Cart subtotal</span><b>KES {{ subtotal }}</b></div><div class="ops-cart-footer"><span>{{ item_count }} unit{{ item_count|pluralize }}</span><form method="post" onsubmit="return confirm('Clear this customer cart?');">{% csrf_token %}<input type="hidden" name="action" value="clear"><button class="ops-remove" type="submit">Clear entire cart</button></form></div></section>{% endif %}
+ </div></div>
+</section>
+{% endblock %}

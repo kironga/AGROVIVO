@@ -11,6 +11,8 @@
    <article><span>Open orders</span><strong>{{ open_orders }}</strong><small>Awaiting payment or fulfilment</small></article>
    <article><span>Paid order value</span><strong>KES {{ paid_revenue|floatformat:0 }}</strong><small>Paid, processing and completed</small></article>
    <article><span>Live products</span><strong>{{ product_count }}</strong><small>Visible in the storefront</small></article>
+   <article><span>Active customer carts</span><strong>{{ active_carts }}</strong><small>Saved carts ready to review</small></article>
+   <article><span>Shipped, agent needed</span><strong>{{ unassigned_deliveries }}</strong><small>Assign a delivery contact</small></article>
   </div>
   <div class="dash-columns">
    <section class="dash-panel"><div class="dash-panel-head"><div><h2>Recent orders</h2><p>Latest customer purchases</p></div><a href="{% url 'dashboard_orders' %}">All orders →</a></div>

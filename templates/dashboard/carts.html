@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Customer carts | Store dashboard{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'dashboard.css' %}">{% endblock %}
+{% block content %}
+<section class="dash-wrap">
+ <div class="dash-heading"><div><span class="dash-eyebrow">AGROFIELDS PLANET · OPERATIONS</span><h1>Customer carts</h1><p>Review saved carts and help customers with product availability or quantities.</p></div><a class="dash-secondary" href="{% url 'dashboard_orders' %}">View orders →</a></div>
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main">
+  <div class="dash-stats"><article><span>Customers with saved carts</span><strong>{{ cart_count }}</strong><small>Active customer selections</small></article><article><span>Items across carts</span><strong>{{ item_count }}</strong><small>Units currently saved</small></article></div>
+  <section class="dash-panel"><form class="dash-filters" method="get"><label class="search-box"><span>⌕</span><input name="q" value="{{ query }}" placeholder="Search customer, phone or product"></label><button class="dash-secondary">Search</button></form>
+   <div class="table-scroll"><table class="dash-table"><thead><tr><th>Customer</th><th>Phone</th><th>Cart units</th><th>Subtotal</th><th>Last updated</th><th>Action</th></tr></thead><tbody>
+   {% for customer in customers %}<tr><td><b>{{ customer.user.get_full_name|default:customer.user.email }}</b><small>{{ customer.user.email }}</small></td><td>{% if customer.user.customer_profile %}{{ customer.user.customer_profile.phone }}{% else %}—{% endif %}</td><td>{{ customer.items }}</td><td>KES {{ customer.subtotal }}</td><td>{{ customer.updated_at|date:'M j, H:i' }}</td><td class="table-actions"><a href="{% url 'dashboard_cart_detail' customer.user.pk %}">Review cart →</a></td></tr>{% empty %}<tr><td colspan="6"><div class="dash-empty">No customer carts found. Carts will appear here when customers add products.</div></td></tr>{% endfor %}
+   </tbody></table></div>
+  </section>
+ </div></div>
+</section>
+{% endblock %}
