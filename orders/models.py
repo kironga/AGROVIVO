@@ -25,6 +25,8 @@ class Order(models.Model):
  delivery_address=models.CharField(max_length=255,blank=True)
  landmark=models.CharField(max_length=180,blank=True)
  delivery_notes=models.TextField(blank=True)
+ delivery_agent_name=models.CharField(max_length=160,blank=True)
+ delivery_agent_phone=models.CharField(max_length=16,blank=True)
  subtotal_kes=models.PositiveIntegerField()
  delivery_kes=models.PositiveIntegerField(default=0)
  total_kes=models.PositiveIntegerField()

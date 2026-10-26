@@ -1,7 +1,7 @@
 class RoleBasedSessionTimeoutMiddleware:
     """Refresh authenticated sessions with a role-specific idle timeout."""
 
-    CUSTOMER_TIMEOUT_SECONDS = 20 * 60
+    CUSTOMER_TIMEOUT_SECONDS = 10 * 60
     STAFF_TIMEOUT_SECONDS = 60 * 60
 
     def __init__(self, get_response):

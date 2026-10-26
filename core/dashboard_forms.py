@@ -100,6 +100,24 @@ class ProductAdminForm(forms.ModelForm):
 class OrderAdminForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ["status", "payment_ref"]
-        labels = {"payment_ref": "Payment reference"}
-        widgets = {"payment_ref": forms.TextInput(attrs={"placeholder": "M-Pesa receipt or payment reference"})}
+        fields = ["status", "payment_ref", "delivery_agent_name", "delivery_agent_phone"]
+        labels = {"payment_ref": "Payment reference", "delivery_agent_name": "Delivery agent name", "delivery_agent_phone": "Delivery agent phone"}
+        widgets = {
+            "payment_ref": forms.TextInput(attrs={"placeholder": "M-Pesa receipt or payment reference"}),
+            "delivery_agent_name": forms.TextInput(attrs={"placeholder": "Agent or courier name"}),
+            "delivery_agent_phone": forms.TelInput(attrs={"placeholder": "0712345678 or +254712345678", "autocomplete": "tel"}),
+        }
+
+    def clean_delivery_agent_phone(self):
+        import re
+
+        phone = re.sub(r"[\s()-]", "", self.cleaned_data.get("delivery_agent_phone", ""))
+        if not phone:
+            return ""
+        if re.fullmatch(r"0[17]\d{8}", phone):
+            phone = "+254" + phone[1:]
+        elif re.fullmatch(r"254[17]\d{8}", phone):
+            phone = "+" + phone
+        if not re.fullmatch(r"\+254[17]\d{8}", phone):
+            raise forms.ValidationError("Enter a Kenyan mobile number, for example 0712345678 or +254712345678.")
+        return phone
