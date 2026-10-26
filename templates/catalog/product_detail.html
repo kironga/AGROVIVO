@@ -9,7 +9,7 @@
   <h1>{{ product.name }}</h1><h2>{{ product.primary_role }}</h2><p class="product-purpose">{{ product.purpose }}</p>
   <div class="product-spec"><div><span>FORMULATION</span><b>{{ product.formulation|default:"Ask us for details" }}</b></div><div><span>BEST POSITIONED FOR</span><b>{{ product.best_for|join:", "|default:"Contact us for guidance" }}</b></div><div><span>SUITABLE CROPS</span><b>{{ product.crops|join:", "|default:"Contact us for guidance" }}</b></div></div>
   <div class="detail-buy"><b>KES {{ product.price_kes }} <small>/ unit</small></b><form method="post" action="{% url 'cart_add' product.id %}" class="js-cart-add">{% csrf_token %}<label>Quantity <input aria-label="Quantity" type="number" name="quantity" value="1" min="1" max="50"></label><button class="button button-green">Add to cart <span>↗</span></button></form></div>
-  <a class="detail-whatsapp" href="https://wa.me/254713324298?text=I'd%20like%20to%20ask%20about%20{{ product.name|urlencode }}">Have a question? <b>Ask an agronomist on WhatsApp ↗</b></a>
+  <a class="detail-whatsapp" href="https://wa.me/254724782982?text=I'd%20like%20to%20ask%20about%20{{ product.name|urlencode }}">Have a question? <b>Ask an agronomist on WhatsApp ↗</b></a>
  </div>
 </section>
 <section class="section product-information">
@@ -34,7 +34,7 @@
  </div>
  <aside class="product-information-aside"><span class="eyebrow">NEED HELP?</span><h3>Get product guidance</h3><p>For crop-specific use, always follow the approved product label and ask a qualified agronomist if you are unsure.</p>
   {% if product.technical_sheet %}<a class="button button-green" href="{{ product.technical_sheet }}" target="_blank" rel="noopener">Download technical sheet ↗</a>{% endif %}
-  <a class="detail-whatsapp" href="https://wa.me/254713324298?text=Please%20advise%20me%20about%20{{ product.name|urlencode }}">Ask an agronomist ↗</a>
+  <a class="detail-whatsapp" href="https://wa.me/254724782982?text=Please%20advise%20me%20about%20{{ product.name|urlencode }}">Ask an agronomist ↗</a>
  </aside>
 </section>
 {% if related %}<section class="section related-section"><span class="eyebrow">KEEP YOUR CROP MOVING</span><h2>Related solutions</h2><div class="product-grid">{% for item in related %}<article class="product-card"><a class="product-visual" href="{{ item.get_absolute_url }}">{% if item.images %}<img src="{{ item.images.0 }}" alt="{{ item.name }}" loading="lazy">{% endif %}<span class="product-stage">{{ item.get_stage_display }}</span></a><div class="product-info"><h3><a href="{{ item.get_absolute_url }}">{{ item.name }}</a></h3><p>{{ item.primary_role }}</p></div></article>{% endfor %}</div></section>{% endif %}
