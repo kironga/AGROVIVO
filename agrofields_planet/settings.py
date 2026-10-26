@@ -45,6 +45,10 @@ LOGOUT_REDIRECT_URL = "home"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend" if DEBUG else "anymail.backends.resend.EmailBackend"
 DEFAULT_FROM_EMAIL = setting("DEFAULT_FROM_EMAIL","orders@agrofields.example")
 ANYMAIL = {"RESEND_API_KEY":setting("RESEND_API_KEY","")}
+AFRICASTALKING_USERNAME = setting("AFRICASTALKING_USERNAME", "")
+AFRICASTALKING_API_KEY = setting("AFRICASTALKING_API_KEY", "")
+AFRICASTALKING_ENV = setting("AFRICASTALKING_ENV", "sandbox").strip().lower()
+AFRICASTALKING_SENDER_ID = setting("AFRICASTALKING_SENDER_ID", "")
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO","https")
     SESSION_COOKIE_SECURE = True

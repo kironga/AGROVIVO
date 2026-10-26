@@ -19,3 +19,15 @@ services:
         value: agrofields-planet.onrender.com
       - key: DATABASE_URL
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: orders@agrofields.example
+      - key: AFRICASTALKING_USERNAME
+        sync: false
+      - key: AFRICASTALKING_API_KEY
+        sync: false
+      - key: AFRICASTALKING_ENV
+        value: sandbox
+      - key: AFRICASTALKING_SENDER_ID
+        value: ""

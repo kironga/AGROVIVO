@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.views import LogoutView
 from django.urls import include,path
 from django.contrib.sitemaps.views import sitemap
 from django.http import JsonResponse
@@ -20,6 +21,6 @@ urlpatterns=[
  path("crop-programmes/",programme_list,name="programmes"),path("crop-programmes/<slug:slug>/",programme_detail,name="programme_detail"),
  path("cart/",cart_page,name="cart"),path("cart/add/<int:product_id>/",add_to_cart,name="cart_add"),path("cart/update/<int:product_id>/",update_cart,name="cart_update"),path("cart/remove/<int:product_id>/",remove_from_cart,name="cart_remove"),
  path("checkout/",checkout,name="checkout"),path("order/<str:order_number>/confirmation/",confirmation,name="confirmation"),
- path("accounts/login/",StaffAwareLoginView.as_view(),name="login"),path("accounts/",include("django.contrib.auth.urls")),path("account/",include("accounts.urls")),
+ path("accounts/login/",StaffAwareLoginView.as_view(),name="login"),path("accounts/logout/",LogoutView.as_view(),name="logout"),path("account/",include("accounts.urls")),
  path("payments/",include("payments.urls")),
  path("sitemap.xml",sitemap,{"sitemaps":sitemaps},name="sitemap"),path("robots.txt",RobotsView.as_view(),name="robots")]

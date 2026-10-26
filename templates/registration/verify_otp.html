@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Verify your details | AgroVivo{% endblock %}
+{% block content %}
+<section class="section form-wrap">
+ <form method="post" class="form-card">
+  {% csrf_token %}
+  {% if purpose == "signup" %}
+   <h1>Verify your account</h1>
+   <p>Enter the separate 6-digit codes sent to <strong>{{ email_hint }}</strong> and <strong>{{ phone_hint }}</strong>. Codes expire in 10 minutes.</p>
+  {% else %}
+   <h1>Verify password reset</h1>
+   <p>If the email belongs to a verified customer account, enter the codes sent to <strong>{{ email_hint }}</strong> and <strong>{{ phone_hint }}</strong>. Codes expire in 10 minutes.</p>
+  {% endif %}
+  {{ form.as_p }}
+  <button class="button" type="submit">Verify both codes</button>
+ </form>
+ <form method="post" action="{% url 'resend_otp' purpose %}" class="form-card otp-resend-form">
+  {% csrf_token %}<p>Didn’t receive both codes?</p><button class="button button-light" type="submit">Resend codes</button>
+ </form>
+</section>
+{% endblock %}

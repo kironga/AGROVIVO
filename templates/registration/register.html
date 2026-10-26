@@ -1,1 +1,14 @@
-{% extends "base.html" %}{% block title %}Create an account{% endblock %}{% block content %}<section class="section form-wrap"><form method="post" class="form-card"><h1>Create your account</h1>{% csrf_token %}{{ form.as_p }}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}<button class="button">Create account</button><p>Already registered? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>.</p></form></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Create your AgroVivo account{% endblock %}
+{% block content %}
+<section class="section form-wrap">
+ <form method="post" class="form-card">
+  <h1>Create your account</h1>
+  <p>Enter your name, email and Kenyan phone number. We’ll send separate verification codes to your email and phone.</p>
+  {% csrf_token %}{{ form.as_p }}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <button class="button" type="submit">Send verification codes</button>
+  <p>Already registered? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>.</p>
+ </form>
+</section>
+{% endblock %}

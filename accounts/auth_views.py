@@ -8,6 +8,12 @@ from catalog.models import Product
 class StaffAwareLoginView(LoginView):
     template_name = "registration/login.html"
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["username"].label = "Email or username"
+        form.fields["username"].widget.attrs.update({"autocomplete": "username", "autocapitalize": "none"})
+        return form
+
     def form_valid(self, form):
         response = super().form_valid(form)
         pending = self.request.session.pop("pending_cart_add", {})

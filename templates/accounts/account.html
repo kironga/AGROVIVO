@@ -1,1 +1,12 @@
-{% extends "base.html" %}{% block title %}My Account{% endblock %}{% block content %}<section class="section"><p class="eyebrow">MY AGROFIELDS</p><h1>Welcome, {{ request.user.get_short_name|default:request.user.username }}</h1><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Log out</button></form><h2>Your orders</h2>{% for order in orders %}<article class="cart-line"><div><b>{{ order.order_number }}</b><p>{{ order.created_at|date:"j M Y" }}</p></div><span>{{ order.get_status_display }}</span><b>KES {{ order.total_kes }}</b></article>{% empty %}<p>No orders yet. <a href="{% url 'products' %}">Browse products</a>.</p>{% endfor %}</section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}My Account{% endblock %}
+{% block content %}
+<section class="section">
+ <p class="eyebrow">MY AGROFIELDS</p>
+ <h1>Welcome, {{ request.user.get_short_name|default:request.user.username }}</h1>
+ <p>{{ request.user.email }}{% if profile %} · {{ profile.phone }}{% endif %}</p>
+ <h2>Your orders</h2>
+ {% for order in orders %}<article class="cart-line"><div><b>{{ order.order_number }}</b><p>{{ order.created_at|date:"j M Y" }}</p></div><span>{{ order.get_status_display }}</span><b>KES {{ order.total_kes }}</b></article>
+ {% empty %}<p>No orders yet. <a href="{% url 'products' %}">Browse products</a>.</p>{% endfor %}
+</section>
+{% endblock %}
