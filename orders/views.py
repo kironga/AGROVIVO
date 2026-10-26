@@ -1,6 +1,8 @@
 import re
 from uuid import uuid4
 from django.shortcuts import render,redirect,get_object_or_404
+from django.urls import reverse
+from urllib.parse import urlencode
 from django.contrib import messages
 from django.db import transaction
 from django.core.mail import send_mail
@@ -9,6 +11,10 @@ from catalog.models import Product
 from .models import Order,OrderItem,OrderStatus,PaymentMethod
 COUNTIES=["Baringo","Bomet","Bungoma","Busia","Elgeyo-Marakwet","Embu","Garissa","Homa Bay","Isiolo","Kajiado","Kakamega","Kericho","Kiambu","Kilifi","Kirinyaga","Kisii","Kisumu","Kitui","Kwale","Laikipia","Lamu","Machakos","Makueni","Mandera","Marsabit","Meru","Migori","Mombasa","Murang'a","Nairobi","Nakuru","Nandi","Narok","Nyamira","Nyandarua","Nyeri","Samburu","Siaya","Taita-Taveta","Tana River","Tharaka-Nithi","Trans Nzoia","Turkana","Uasin Gishu","Vihiga","Wajir","West Pokot"]
 def checkout(request):
+ if not request.user.is_authenticated:
+  request.session["cart"]={}
+  messages.info(request,"Sign in or create an account before checking out.")
+  return redirect(f"{reverse('login')}?{urlencode({'next':reverse('products')})}")
  cart=request.session.get("cart",{})
  products=Product.objects.filter(id__in=cart.keys(),active=True)
  lines=[(p,int(cart.get(str(p.id),0))) for p in products]

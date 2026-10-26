@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import include,path
 from django.contrib.sitemaps.views import sitemap
 from django.http import JsonResponse
+from django.conf import settings
+from django.views.static import serve
 from core.views import HomeView,AboutView,ContactView,RobotsView,ResourcesView,PartnersView,LegalView,DifferenceView
 from core.sitemaps import StaticViewSitemap
 from catalog.views import product_list,product_detail,programme_list,programme_detail
@@ -10,6 +12,7 @@ from orders.views import checkout,confirmation
 from accounts.auth_views import StaffAwareLoginView
 sitemaps={"pages":StaticViewSitemap}
 urlpatterns=[
+ path("media/<path:path>",serve,{"document_root":settings.MEDIA_ROOT},name="uploaded_media"),
  path("dashboard/",include("core.dashboard_urls")),
  path("healthz",lambda request:JsonResponse({"status":"ok"}),name="healthz"),
  path("admin/",admin.site.urls),path("",HomeView.as_view(),name="home"),path("about/",AboutView.as_view(),name="about"),path("difference/",DifferenceView.as_view(),name="difference"),path("resources/",ResourcesView.as_view(),name="resources"),path("partners/",PartnersView.as_view(),name="partners"),path("privacy/",LegalView.as_view(),{"title":"Privacy policy"},name="privacy"),path("terms/",LegalView.as_view(),{"title":"Terms of use"},name="terms"),path("contact/",ContactView.as_view(),name="contact"),

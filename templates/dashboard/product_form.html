@@ -5,13 +5,14 @@
 {% block content %}
 <section class="dash-wrap">
  <div class="dash-heading"><div><span class="dash-eyebrow">CATALOGUE</span><h1>{{ page_title }}</h1><p>Product details appear on the public storefront.</p></div><a class="dash-secondary" href="{% url 'dashboard_products' %}">← Back to products</a></div>
- <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main"><form class="dash-panel dash-form" method="post" novalidate>{% csrf_token %}
+ <div class="dash-layout">{% include 'dashboard/_nav.html' %}<div class="dash-main"><form class="dash-panel dash-form" method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
   {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
   <div class="form-intro"><h2>Product information</h2><p>Fields marked required must be completed. Price and stock are managed in Kenyan shillings and units.</p></div>
-  <div class="form-grid">{% for field in form %}<div class="form-field {% if field.name == 'purpose' or field.name == 'key_benefits_text' or field.name == 'best_for_text' %}field-wide{% endif %} {% if field.field.widget.input_type == 'checkbox' %}field-check{% endif %}">
+  <div class="form-grid">{% for field in form %}<div class="form-field {% if field.name == 'purpose' or field.name == 'key_benefits_text' or field.name == 'best_for_text' or field.name == 'application_guide' or field.name == 'mode_of_action' or field.name == 'safety_precautions' or field.name == 'compatibility' or field.name == 'active_ingredients' or field.name == 'application_rate' or field.name == 'application_method' or field.name == 'target_problems' %}field-wide{% endif %} {% if field.field.widget.input_type == 'checkbox' %}field-check{% endif %}">
    {% if field.field.widget.input_type == 'checkbox' %}<label class="check-label">{{ field }}<span>{{ field.label }}</span></label>{% else %}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<b>*</b>{% endif %}</label>{{ field }}{% endif %}
    {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
   </div>{% endfor %}</div>
+  {% if product.images %}<div class="current-product-image"><span>Current image preview</span><img id="product-image-preview" src="{{ product.images.0 }}" alt="Current {{ product.name }} product image"></div>{% else %}<div class="current-product-image" hidden><span>Image preview</span><img id="product-image-preview" alt="Product image preview"></div>{% endif %}
   <div class="form-actions"><a class="dash-secondary" href="{% url 'dashboard_products' %}">Cancel</a><button class="dash-primary" type="submit">Save product</button></div>
  </form></div></div>
 </section>

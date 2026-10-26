@@ -44,7 +44,7 @@ def product_list(request):
 
 @staff_member_required
 def product_create(request):
-    form = ProductAdminForm(request.POST or None)
+    form = ProductAdminForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         product = form.save()
         messages.success(request, f"{product.name} has been added to the catalogue.")
@@ -55,7 +55,7 @@ def product_create(request):
 @staff_member_required
 def product_edit(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
-    form = ProductAdminForm(request.POST or None, instance=product)
+    form = ProductAdminForm(request.POST or None, request.FILES or None, instance=product)
     if request.method == "POST" and form.is_valid():
         product = form.save()
         messages.success(request, f"Changes to {product.name} have been saved.")

@@ -13,7 +13,7 @@ All 11 product prices are illustrative KES placeholders. Confirm prices, stock, 
 
 ## Included now
 
-Responsive corporate and catalogue pages, 11-product and seven-crop seed command, Django admin, session cart, validated checkout, stock checks, order records, customer login/order history, contact form, sitemap and robots endpoint, WhatsApp CTA, Dockerfile and environment template. M-Pesa is simulated only in DEBUG. Production payment endpoints deliberately return unavailable until a real Daraja STK client and Stripe Checkout/webhook verification are configured. The Render start command ensures missing seed catalog records are created at startup without overwriting existing catalog edits; use `python manage.py seed_products --force` to reapply seed values intentionally.
+Responsive corporate and catalogue pages, 11-product and seven-crop seed command, Django admin, staff product/order dashboard, session cart, validated checkout, stock checks, order records, customer login/order history, contact form, sitemap and robots endpoint, WhatsApp CTA, Dockerfile and environment template. M-Pesa is simulated only in DEBUG. Production payment endpoints deliberately return unavailable until a real Daraja STK client and Stripe Checkout/webhook verification are configured. The Render start command ensures missing seed catalog records are created at startup without overwriting existing catalog edits; use `python manage.py seed_products --force` to reapply seed values intentionally.
 
 ## Frontend image assets
 
@@ -35,6 +35,10 @@ Vercel can deploy Django full-stack, but Vercel Hobby is restricted to personal,
 
 ## Store administrator dashboard
 
-Staff users can open `/dashboard/` to manage products, prices, descriptions, stock and visibility, and to search orders, view delivery details, and update order status/payment references. Product images can be referenced by a `/static/...` path or public image URL. Archive a product to hide it from the storefront while retaining old order records. For local development, create a staff login with `python manage.py createsuperuser`.
+Staff users can open `/dashboard/` to manage products, prices, descriptions, stock and visibility, and to search orders, view delivery details, and update order status/payment references. Product images can be selected from `static/images/product-photos/`, referenced by a public image URL, or uploaded from the computer. Product pages also support editable type, ingredients, target crops, pack sizes, mode of action, application rate/method/guide, PHI, re-entry interval, safety, compatibility and a technical-sheet link. Archive a product to hide it from the storefront while retaining old order records. For local development, create a staff login with `python manage.py createsuperuser`.
+
+On the free Render plan, uploaded media is stored on an ephemeral filesystem and may disappear after a restart or redeploy. Static files in the repository and external image URLs persist. For durable dashboard uploads, configure object storage such as Cloudinary or an S3-compatible bucket before relying on uploads in production.
+
+Customers can browse the full public catalogue without an account. An account is required to add items to a cart, manage the cart and check out. Customer sessions expire after 20 minutes of inactivity; staff sessions expire after one hour.
 
 Render free services do not provide a shell. To create the first deployed administrator, add `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` and a strong `DJANGO_SUPERUSER_PASSWORD` under the Render service's Environment settings, then redeploy. The startup command creates the superuser only if that username does not already exist. After the first successful deploy, remove `DJANGO_SUPERUSER_PASSWORD` from Render; the account remains in Neon. A user's active pre-checkout cart is held in that user's browser session, so administrators can manage orders after checkout but cannot view or edit other users' live carts.

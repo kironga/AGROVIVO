@@ -20,7 +20,7 @@ for platform_host in (setting("RENDER_EXTERNAL_HOSTNAME", ""), setting("VERCEL_U
     if platform_host and platform_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(platform_host)
 INSTALLED_APPS = ["django.contrib.admin","django.contrib.auth","django.contrib.contenttypes","django.contrib.sessions","django.contrib.messages","django.contrib.staticfiles","django.contrib.sitemaps","core","catalog","cart","orders","payments","accounts"]
-MIDDLEWARE = ["django.middleware.security.SecurityMiddleware","django.contrib.sessions.middleware.SessionMiddleware","django.middleware.common.CommonMiddleware","django.middleware.csrf.CsrfViewMiddleware","django.contrib.auth.middleware.AuthenticationMiddleware","django.contrib.messages.middleware.MessageMiddleware","django.middleware.clickjacking.XFrameOptionsMiddleware"]
+MIDDLEWARE = ["django.middleware.security.SecurityMiddleware","django.contrib.sessions.middleware.SessionMiddleware","django.middleware.common.CommonMiddleware","django.middleware.csrf.CsrfViewMiddleware","django.contrib.auth.middleware.AuthenticationMiddleware","accounts.middleware.RoleBasedSessionTimeoutMiddleware","django.contrib.messages.middleware.MessageMiddleware","django.middleware.clickjacking.XFrameOptionsMiddleware"]
 if not DEBUG:
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 ROOT_URLCONF = "agrofields_planet.urls"
@@ -35,6 +35,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR/"staticfiles"
 STATICFILES_DIRS = [BASE_DIR/"static"]
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR/"media"
+SESSION_COOKIE_AGE = 20 * 60
 STORAGES = {"default":{"BACKEND":"django.core.files.storage.FileSystemStorage"},"staticfiles":{"BACKEND":"django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage"}}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = "account"

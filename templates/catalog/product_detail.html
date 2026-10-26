@@ -1,1 +1,41 @@
-{% extends "base.html" %}{% block title %}{{ product.name }} | AgroVivo{% endblock %}{% block content %}<div class="crumb"><a href="{% url 'products' %}">AgroVivo</a><span>/</span>{{ product.name }}</div><section class="product-detail section"><div class="product-art">{% if product.images %}<img src="{{ product.images.0 }}" alt="{{ product.name }} product packaging">{% else %}<img src="/static/images/farm-photos/IMG-20261024-WA0042.jpg" alt="Avocado crop">{% endif %}</div><div class="product-detail-copy"><span class="eyebrow">{{ product.get_stage_display }} · AGROVIVO RANGE</span><span class="focus-label">{{ product.farmer_focus }}</span><h1>{{ product.name }}</h1><h2>{{ product.primary_role }}</h2><p class="product-purpose">{{ product.purpose }}</p><div class="product-spec"><div><span>FORMULATION</span><b>{{ product.formulation }}</b></div><div><span>BEST POSITIONED FOR</span><b>{{ product.best_for|join:", " }}</b></div><div><span>SUITABLE CROPS</span><b>{{ product.crops|join:", " }}</b></div></div><div class="detail-buy"><b>KES {{ product.price_kes }} <small>/ unit</small></b><form method="post" action="{% url 'cart_add' product.id %}" class="js-cart-add">{% csrf_token %}<label>Quantity <input aria-label="Quantity" type="number" name="quantity" value="1" min="1" max="50"></label><button class="button button-green">Add to cart <span>↗</span></button></form></div><a class="detail-whatsapp" href="https://wa.me/254713324298?text=I'd%20like%20to%20ask%20about%20{{ product.name|urlencode }}">Have a question? <b>Ask an agronomist on WhatsApp ↗</b></a></div></section><section class="section detail-lower"><div><span class="eyebrow">WHY FARMERS CHOOSE IT</span><h2>Focused on the crop’s needs.</h2><ul class="benefits">{% for benefit in product.key_benefits %}<li><span>✓</span>{{ benefit }}</li>{% endfor %}</ul></div><aside><span class="eyebrow">APPLICATION GUIDANCE</span><p>Application rate, timing, crop registration and compatibility must follow the approved product label and technical recommendation.</p>{% if product.technical_sheet %}<a href="{{ product.technical_sheet }}">Download technical sheet ↗</a>{% else %}<a href="https://wa.me/254713324298?text=Please%20send%20the%20{{ product.name|urlencode }}%20technical%20sheet">Request a technical sheet ↗</a>{% endif %}</aside></section>{% if related %}<section class="section related-section"><span class="eyebrow">KEEP YOUR CROP MOVING</span><h2>Related solutions</h2><div class="product-grid">{% for item in related %}<article class="product-card"><a class="product-visual" href="{{ item.get_absolute_url }}">{% if item.images %}<img src="{{ item.images.0 }}" alt="{{ item.name }}" loading="lazy">{% endif %}<span class="product-stage">{{ item.get_stage_display }}</span></a><div class="product-info"><h3><a href="{{ item.get_absolute_url }}">{{ item.name }}</a></h3><p>{{ item.primary_role }}</p></div></article>{% endfor %}</div></section>{% endif %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | AgroVivo{% endblock %}
+{% block content %}
+<div class="crumb"><a href="{% url 'products' %}">AgroVivo</a><span>/</span>{{ product.name }}</div>
+<section class="product-detail section">
+ <div class="product-art">{% if product.images %}<img src="{{ product.images.0 }}" alt="{{ product.name }} product packaging">{% else %}<img src="/static/images/farm-photos/IMG-20261024-WA0042.jpg" alt="Farm crops">{% endif %}</div>
+ <div class="product-detail-copy">
+  <span class="eyebrow">{{ product.get_stage_display }} · AGROVIVO RANGE</span><span class="focus-label">{{ product.farmer_focus }}</span>
+  <h1>{{ product.name }}</h1><h2>{{ product.primary_role }}</h2><p class="product-purpose">{{ product.purpose }}</p>
+  <div class="product-spec"><div><span>FORMULATION</span><b>{{ product.formulation|default:"Ask us for details" }}</b></div><div><span>BEST POSITIONED FOR</span><b>{{ product.best_for|join:", "|default:"Contact us for guidance" }}</b></div><div><span>SUITABLE CROPS</span><b>{{ product.crops|join:", "|default:"Contact us for guidance" }}</b></div></div>
+  <div class="detail-buy"><b>KES {{ product.price_kes }} <small>/ unit</small></b><form method="post" action="{% url 'cart_add' product.id %}" class="js-cart-add">{% csrf_token %}<label>Quantity <input aria-label="Quantity" type="number" name="quantity" value="1" min="1" max="50"></label><button class="button button-green">Add to cart <span>↗</span></button></form></div>
+  <a class="detail-whatsapp" href="https://wa.me/254713324298?text=I'd%20like%20to%20ask%20about%20{{ product.name|urlencode }}">Have a question? <b>Ask an agronomist on WhatsApp ↗</b></a>
+ </div>
+</section>
+<section class="section product-information">
+ <div class="product-information-main">
+  <span class="eyebrow">PRODUCT INFORMATION</span><h2>Details for confident decisions.</h2>
+  <dl class="technical-facts">
+   {% if product.product_type %}<div><dt>Product type</dt><dd>{{ product.product_type }}</dd></div>{% endif %}
+   {% if product.target_crop_area %}<div><dt>Target crop / area</dt><dd>{{ product.target_crop_area|join:", " }}</dd></div>{% endif %}
+   {% if product.available_packs %}<div><dt>Available packs</dt><dd>{{ product.available_packs|join:", " }}</dd></div>{% endif %}
+   {% if product.active_ingredients %}<div><dt>Active ingredients / composition</dt><dd>{{ product.active_ingredients|linebreaksbr }}</dd></div>{% endif %}
+   {% if product.mode_of_action %}<div><dt>Mode of action</dt><dd>{{ product.mode_of_action|linebreaksbr }}</dd></div>{% endif %}
+   {% if product.target_problems %}<div><dt>Targets</dt><dd>{{ product.target_problems|linebreaksbr }}</dd></div>{% endif %}
+   {% if product.application_rate %}<div><dt>Application rate</dt><dd>{{ product.application_rate|linebreaksbr }}</dd></div>{% endif %}
+   {% if product.application_method %}<div><dt>Mode of application</dt><dd>{{ product.application_method|linebreaksbr }}</dd></div>{% endif %}
+   {% if product.pre_harvest_interval %}<div><dt>Pre-harvest interval (PHI)</dt><dd>{{ product.pre_harvest_interval }}</dd></div>{% endif %}
+   {% if product.re_entry_interval %}<div><dt>Re-entry interval</dt><dd>{{ product.re_entry_interval }}</dd></div>{% endif %}
+  </dl>
+  {% if product.application_guide %}<div class="application-copy"><h3>Application guide</h3>{{ product.application_guide|linebreaks }}</div>{% endif %}
+  {% if product.safety_precautions %}<div class="application-copy"><h3>Safety precautions</h3>{{ product.safety_precautions|linebreaks }}</div>{% endif %}
+  {% if product.compatibility %}<div class="application-copy"><h3>Compatibility and mixing</h3>{{ product.compatibility|linebreaks }}</div>{% endif %}
+  {% if product.key_benefits %}<div class="application-copy"><h3>Key benefits</h3><ul class="benefits">{% for benefit in product.key_benefits %}<li><span>✓</span>{{ benefit }}</li>{% endfor %}</ul></div>{% endif %}
+ </div>
+ <aside class="product-information-aside"><span class="eyebrow">NEED HELP?</span><h3>Get product guidance</h3><p>For crop-specific use, always follow the approved product label and ask a qualified agronomist if you are unsure.</p>
+  {% if product.technical_sheet %}<a class="button button-green" href="{{ product.technical_sheet }}" target="_blank" rel="noopener">Download technical sheet ↗</a>{% endif %}
+  <a class="detail-whatsapp" href="https://wa.me/254713324298?text=Please%20advise%20me%20about%20{{ product.name|urlencode }}">Ask an agronomist ↗</a>
+ </aside>
+</section>
+{% if related %}<section class="section related-section"><span class="eyebrow">KEEP YOUR CROP MOVING</span><h2>Related solutions</h2><div class="product-grid">{% for item in related %}<article class="product-card"><a class="product-visual" href="{{ item.get_absolute_url }}">{% if item.images %}<img src="{{ item.images.0 }}" alt="{{ item.name }}" loading="lazy">{% endif %}<span class="product-stage">{{ item.get_stage_display }}</span></a><div class="product-info"><h3><a href="{{ item.get_absolute_url }}">{{ item.name }}</a></h3><p>{{ item.primary_role }}</p></div></article>{% endfor %}</div></section>{% endif %}
+{% endblock %}

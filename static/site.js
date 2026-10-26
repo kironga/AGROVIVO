@@ -16,6 +16,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "password-input-wrap";
+    input.before(wrapper);
+    wrapper.append(input);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "password-visibility-toggle";
+    toggle.setAttribute("aria-label", "Show password");
+    toggle.setAttribute("aria-pressed", "false");
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    wrapper.append(toggle);
+    toggle.addEventListener("click", () => {
+      const visible = input.type === "password";
+      input.type = visible ? "text" : "password";
+      toggle.setAttribute("aria-pressed", String(visible));
+      toggle.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+    });
+  });
+
+  const staticImage = document.querySelector("#id_static_image");
+  const imageSource = document.querySelector("#id_image_source");
+  const imageUpload = document.querySelector("#id_image_upload");
+  const imagePreview = document.querySelector("#product-image-preview");
+  const setImagePreview = (src) => {
+    if (!imagePreview) return;
+    const box = imagePreview.closest(".current-product-image");
+    if (!src) {
+      if (box) box.hidden = true;
+      return;
+    }
+    imagePreview.src = src;
+    if (box) box.hidden = false;
+  };
+  staticImage?.addEventListener("change", () => {
+    if (staticImage.value) {
+      if (imageSource) imageSource.value = "";
+      setImagePreview(staticImage.value);
+    }
+  });
+  imageSource?.addEventListener("input", () => {
+    if (imageSource.value) {
+      if (staticImage) staticImage.value = "";
+      setImagePreview(imageSource.value);
+    }
+  });
+  imageUpload?.addEventListener("change", () => {
+    const file = imageUpload.files?.[0];
+    if (file) setImagePreview(URL.createObjectURL(file));
+  });
+
   const search = document.querySelector("#product-search");
   const products = [...document.querySelectorAll(".catalog-product")];
   const visibleCount = document.querySelector("#visible-count");
@@ -77,6 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
           body: new FormData(form),
           headers: { "X-Requested-With": "XMLHttpRequest" },
         });
+        if (response.redirected) {
+          window.location.assign(response.url);
+          return;
+        }
         const page = new DOMParser().parseFromString(await response.text(), "text/html");
         const updatedCount = page.querySelector(".nav-cart b");
         const cartCount = document.querySelector(".nav-cart b");

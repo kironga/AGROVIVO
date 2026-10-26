@@ -1,9 +1,13 @@
 from django.shortcuts import get_object_or_404,render,redirect
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.urls import reverse
+from urllib.parse import urlencode
 from catalog.models import Product
 def cart_page(request):
- cart=request.session.get("cart",{})
+ cart=request.session.get("cart",{}) if request.user.is_authenticated else {}
+ if not request.user.is_authenticated and request.session.get("cart"):
+  request.session["cart"]={}
  products=Product.objects.filter(id__in=cart.keys(),active=True)
  lines=[{"product":p,"quantity":int(cart.get(str(p.id),0))} for p in products]
  subtotal=sum(x["product"].price_kes*x["quantity"] for x in lines)
@@ -13,6 +17,14 @@ def add_to_cart(request,product_id):
  product=get_object_or_404(Product,pk=product_id,active=True)
  try: quantity=max(1,min(50,int(request.POST.get("quantity",1))))
  except ValueError: quantity=1
+ if not request.user.is_authenticated:
+  pending=request.session.get("pending_cart_add",{})
+  key=str(product_id)
+  try: pending[key]=min(50,int(pending.get(key,0))+quantity)
+  except (TypeError,ValueError): pending[key]=quantity
+  request.session["pending_cart_add"]=pending
+  messages.info(request,"Create an account or sign in to add this product to your cart.")
+  return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
  cart=request.session.get("cart",{}); key=str(product_id)
  cart[key]=min(product.stock,int(cart.get(key,0))+quantity) if product.stock else 0
  request.session["cart"]=cart
@@ -21,6 +33,9 @@ def add_to_cart(request,product_id):
  return redirect("cart")
 @require_POST
 def update_cart(request,product_id):
+ if not request.user.is_authenticated:
+  messages.info(request,"Sign in to manage your cart.")
+  return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
  product=get_object_or_404(Product,pk=product_id,active=True)
  try: quantity=max(0,min(product.stock,int(request.POST.get("quantity",1))))
  except ValueError: quantity=1
@@ -31,5 +46,8 @@ def update_cart(request,product_id):
  return redirect("cart")
 @require_POST
 def remove_from_cart(request,product_id):
+ if not request.user.is_authenticated:
+  messages.info(request,"Sign in to manage your cart.")
+  return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
  cart=request.session.get("cart",{}); cart.pop(str(product_id),None); request.session["cart"]=cart
  return redirect("cart")
