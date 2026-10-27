@@ -108,6 +108,11 @@ class OrderAdminForm(forms.ModelForm):
             "delivery_agent_phone": forms.TelInput(attrs={"placeholder": "0712345678 or +254712345678", "autocomplete": "tel"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.status != "CANCELLED":
+            self.fields["status"].choices = [choice for choice in self.fields["status"].choices if choice[0] != "CANCELLED"]
+
     def clean_delivery_agent_phone(self):
         import re
 

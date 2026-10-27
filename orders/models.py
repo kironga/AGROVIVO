@@ -38,6 +38,13 @@ class Order(models.Model):
  mpesa_account_reference=models.CharField(max_length=12,blank=True)
  created_at=models.DateTimeField(auto_now_add=True)
  updated_at=models.DateTimeField(auto_now=True)
+ @property
+ def customer_can_cancel(self):
+  if self.payment_ref or self.status in (OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.CANCELLED):
+   return False
+  if self.status in (OrderStatus.PENDING, OrderStatus.PAYMENT_PENDING):
+   return True
+  return self.payment_method == PaymentMethod.COD and self.status == OrderStatus.PROCESSING
  def __str__(self): return self.order_number
 class OrderItem(models.Model):
  order=models.ForeignKey(Order,on_delete=models.CASCADE,related_name="items")

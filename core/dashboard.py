@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from catalog.models import CropStage, Product
 from orders.models import Order, OrderStatus
+from orders.services import cancel_order as cancel_order_service, OrderCancellationError
 
 from .dashboard_forms import OrderAdminForm, ProductAdminForm
 from accounts.forms import AdminSetPasswordForm, AdminUserCreateForm
@@ -106,6 +107,22 @@ def order_detail(request, order_id):
         messages.success(request, f"Order {order.order_number} has been updated.")
         return redirect("dashboard_order_detail", order_id=order.pk)
     return render(request, "dashboard/order_detail.html", {"order": order, "form": form})
+
+
+@staff_member_required
+@require_POST
+def order_cancel(request, order_id):
+    order = get_object_or_404(Order, pk=order_id)
+    try:
+        cancel_order_service(order.pk, request.user)
+    except OrderCancellationError as error:
+        messages.error(request, str(error))
+    else:
+        if order.payment_ref or order.status == OrderStatus.PAID:
+            messages.warning(request, f"Order {order.order_number} cancelled and stock returned. Any paid M-Pesa amount must be refunded separately.")
+        else:
+            messages.success(request, f"Order {order.order_number} cancelled and its stock returned to inventory.")
+    return redirect("dashboard_order_detail", order_id=order.pk)
 
 
 @staff_member_required

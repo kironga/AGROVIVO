@@ -1,6 +1,8 @@
 import re
 from uuid import uuid4
 from django.shortcuts import render,redirect,get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.urls import reverse
 from urllib.parse import urlencode
 from django.contrib import messages
@@ -10,6 +12,7 @@ from django.conf import settings
 from catalog.models import Product
 from cart.models import CartItem
 from .models import Order,OrderItem,OrderStatus,PaymentMethod
+from .services import cancel_order as cancel_order_service, OrderCancellationError
 COUNTIES=["Baringo","Bomet","Bungoma","Busia","Elgeyo-Marakwet","Embu","Garissa","Homa Bay","Isiolo","Kajiado","Kakamega","Kericho","Kiambu","Kilifi","Kirinyaga","Kisii","Kisumu","Kitui","Kwale","Laikipia","Lamu","Machakos","Makueni","Mandera","Marsabit","Meru","Migori","Mombasa","Murang'a","Nairobi","Nakuru","Nandi","Narok","Nyamira","Nyandarua","Nyeri","Samburu","Siaya","Taita-Taveta","Tana River","Tharaka-Nithi","Trans Nzoia","Turkana","Uasin Gishu","Vihiga","Wajir","West Pokot"]
 def checkout(request):
  if not request.user.is_authenticated:
@@ -72,4 +75,16 @@ def checkout(request):
 def confirmation(request,order_number):
  order=get_object_or_404(Order,order_number=order_number)
  if order.user_id and request.user!=order.user: return redirect("home")
- return render(request,"orders/confirmation.html",{"order":order})
+ return render(request,"orders/confirmation.html",{"order":order,"can_cancel":request.user.is_authenticated and order.user_id==request.user.pk and order.customer_can_cancel})
+
+@login_required
+@require_POST
+def customer_cancel_order(request,order_number):
+ order=get_object_or_404(Order,order_number=order_number,user=request.user)
+ try:
+  cancel_order_service(order.pk,request.user)
+ except OrderCancellationError as error:
+  messages.error(request,str(error))
+ else:
+  messages.success(request,f"Order {order.order_number} cancelled. Its stock has been returned to inventory.")
+ return redirect("account")

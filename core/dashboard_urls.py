@@ -10,6 +10,7 @@ urlpatterns = [
     path("products/<int:product_id>/archive/", dashboard.product_archive, name="dashboard_product_archive"),
     path("orders/", dashboard.order_list, name="dashboard_orders"),
     path("orders/<int:order_id>/", dashboard.order_detail, name="dashboard_order_detail"),
+    path("orders/<int:order_id>/cancel/", dashboard.order_cancel, name="dashboard_order_cancel"),
     path("carts/", dashboard.cart_list, name="dashboard_carts"),
     path("carts/<int:user_id>/", dashboard.cart_detail, name="dashboard_cart_detail"),
     path("users/", dashboard.user_list, name="dashboard_users"),

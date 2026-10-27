@@ -7,6 +7,7 @@ from datetime import datetime
 import requests
 from django.conf import settings
 from django.contrib import messages
+from django.db import transaction
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -154,6 +155,7 @@ def mpesa_start(request, order_number):
 
 @csrf_exempt
 @require_POST
+@transaction.atomic
 def mpesa_callback(request):
     try:
         payload = json.loads(request.body)
@@ -163,7 +165,7 @@ def mpesa_callback(request):
     except (ValueError, KeyError, TypeError):
         return HttpResponseBadRequest("Invalid callback")
 
-    order = Order.objects.filter(mpesa_checkout_request_id=checkout_id, payment_method="MPESA").first()
+    order = Order.objects.select_for_update().filter(mpesa_checkout_request_id=checkout_id, payment_method="MPESA").first()
     if not order:
         # Acknowledge unknown/old callback IDs; never mark an order paid by AccountReference alone.
         return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
@@ -182,9 +184,15 @@ def mpesa_callback(request):
         except (KeyError, TypeError, ValueError):
             return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
         if amount == order.total_kes and paid_phone == expected_phone and receipt:
-            order.status = OrderStatus.PAID
             order.payment_ref = receipt
-            order.save(update_fields=["status", "payment_ref", "updated_at"])
+            if order.status != OrderStatus.CANCELLED:
+                order.status = OrderStatus.PAID
+                order.save(update_fields=["status", "payment_ref", "updated_at"])
+            else:
+                # The customer may approve a prompt after cancelling. Preserve
+                # the cancellation and receipt so staff can reconcile/refund it.
+                order.save(update_fields=["payment_ref", "updated_at"])
+                logger.warning("Daraja payment succeeded after order %s was cancelled; manual reconciliation is required.", order.order_number)
 
     return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
 
