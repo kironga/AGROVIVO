@@ -2,6 +2,8 @@ from django.shortcuts import get_object_or_404,render,redirect
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.urls import reverse
+from django.http import JsonResponse
+from django.utils.http import url_has_allowed_host_and_scheme
 from urllib.parse import urlencode
 from catalog.models import Product
 from .models import CartItem
@@ -23,14 +25,28 @@ def add_to_cart(request,product_id):
   except (TypeError,ValueError): pending[key]=quantity
   request.session["pending_cart_add"]=pending
   messages.info(request,"Create an account or sign in to add this product to your cart.")
-  return redirect(f"{reverse('login')}?{urlencode({'next':reverse('cart')})}")
+  next_url=request.META.get("HTTP_REFERER", reverse("products"))
+  if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+   next_url=reverse("products")
+  return redirect(f"{reverse('login')}?{urlencode({'next':next_url})}")
  item,_=CartItem.objects.get_or_create(user=request.user,product=product,defaults={"quantity":0})
  item.quantity=min(product.stock,item.quantity+quantity) if product.stock else 0
  if item.quantity: item.save(update_fields=["quantity","updated_at"])
  else: item.delete()
- if not item.quantity: messages.error(request,"This product is currently out of stock.")
- else: messages.success(request,f"{product.name} added to your cart.")
- return redirect("cart")
+ ajax=request.headers.get("x-requested-with")=="XMLHttpRequest"
+ cart_count=sum(CartItem.objects.filter(user=request.user,product__active=True).values_list("quantity",flat=True))
+ if not item.quantity:
+  message="This product is currently out of stock."
+  if ajax: return JsonResponse({"success":False,"message":message,"cart_count":cart_count},status=400)
+  messages.error(request,message)
+ else:
+  message=f"{product.name} added to your cart."
+  if ajax: return JsonResponse({"success":True,"message":message,"cart_count":cart_count})
+  messages.success(request,message)
+ next_url=request.META.get("HTTP_REFERER", reverse("products"))
+ if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+  next_url=reverse("products")
+ return redirect(next_url)
 @require_POST
 def update_cart(request,product_id):
  if not request.user.is_authenticated:

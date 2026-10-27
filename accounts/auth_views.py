@@ -55,6 +55,8 @@ class StaffAwareLoginView(LoginView):
         return response
 
     def get_success_url(self):
-        # Always land in the correct dashboard after authentication, even when
-        # the login form was opened with a stale or unrelated `next` value.
-        return self.get_role_redirect_url()
+        # Staff always enter their dashboard. Customers may return to the
+        # catalogue page that sent them to sign-in (for example, Add to cart).
+        if self.request.user.is_staff:
+            return reverse("dashboard_home")
+        return self.get_redirect_url() or self.get_role_redirect_url()

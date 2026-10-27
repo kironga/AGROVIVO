@@ -132,21 +132,21 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.assign(response.url);
           return;
         }
-        const page = new DOMParser().parseFromString(await response.text(), "text/html");
-        const updatedCount = page.querySelector(".nav-cart b");
-        const cartCount = document.querySelector(".nav-cart b");
-        if (updatedCount && cartCount) cartCount.textContent = updatedCount.textContent;
-        const error = page.querySelector(".messages .error");
-        const success = page.querySelector(".messages .success");
-        if (!response.ok || error) {
-          showToast(error?.textContent.trim() || "Could not add this item.", true);
+        const result = await response.json();
+        const cartCount = document.querySelector("#cart-count");
+        const floatingCart = document.querySelector(".floating-cart");
+        if (cartCount && result.cart_count !== undefined) cartCount.textContent = result.cart_count;
+        if (floatingCart && result.cart_count !== undefined) {
+          floatingCart.setAttribute("aria-label", `Open shopping cart, ${result.cart_count} items`);
+        }
+        if (!response.ok || !result.success) {
+          showToast(result.message || "Could not add this item.", true);
         } else {
-          showToast(success?.textContent.trim() || "Added to your cart.");
-          button.textContent = "✓";
+          showToast(result.message || "Added to your cart.");
+          button.innerHTML = "✓";
         }
       } catch {
-        form.submit();
-        return;
+        showToast("The cart could not be updated. Check your connection and try again.", true);
       } finally {
         window.setTimeout(() => {
           button.disabled = false;
