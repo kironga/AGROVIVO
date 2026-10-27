@@ -33,6 +33,9 @@ class Order(models.Model):
  status=models.CharField(max_length=24,choices=OrderStatus.choices,default=OrderStatus.PENDING)
  payment_method=models.CharField(max_length=8,choices=PaymentMethod.choices)
  payment_ref=models.CharField(max_length=160,blank=True)
+ mpesa_checkout_request_id=models.CharField(max_length=100,blank=True,db_index=True)
+ mpesa_merchant_request_id=models.CharField(max_length=100,blank=True)
+ mpesa_account_reference=models.CharField(max_length=12,blank=True)
  created_at=models.DateTimeField(auto_now_add=True)
  updated_at=models.DateTimeField(auto_now=True)
  def __str__(self): return self.order_number

@@ -23,6 +23,18 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         value: orders@agrofields.example
+      - key: MPESA_ENV
+        value: sandbox
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_SHORTCODE
+        value: "174379"
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: MPESA_CALLBACK_URL
+        value: https://agrofields-planet.onrender.com/payments/mpesa/callback/
       - key: AFRICASTALKING_USERNAME
         sync: false
       - key: AFRICASTALKING_API_KEY

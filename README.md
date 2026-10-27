@@ -25,7 +25,7 @@ Place farm imagery in `static/images/farm-photos/`, product imagery in `static/i
 
 ## Production setup before launch
 
-Set DEBUG=False, SECRET_KEY, ALLOWED_HOSTS and PostgreSQL DATABASE_URL. Configure RESEND_API_KEY and DEFAULT_FROM_EMAIL. Set Daraja credentials and a public HTTPS callback URL, then implement and verify the Daraja OAuth/STK Push and callback signing/validation path. Implement Stripe Checkout Session creation and verify webhook signatures with STRIPE_WEBHOOK_SECRET. Configure domain and sitemap URL, review security headers/rate limiting, product images/storage, county delivery operations, legal pages, and payment reconciliation. The current app has no live card or live M-Pesa processing.
+Set DEBUG=False, SECRET_KEY, ALLOWED_HOSTS and PostgreSQL DATABASE_URL. Configure RESEND_API_KEY and DEFAULT_FROM_EMAIL. Daraja sandbox STK Push is configured with MPESA_ENV, MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY and a public HTTPS MPESA_CALLBACK_URL. Use the Daraja sandbox simulator for testing; production payments require Safaricom go-live approval and production credentials. Stripe Checkout Session creation and webhook signature verification are not configured. Configure domain and sitemap URL, review security headers/rate limiting, product images/storage, county delivery operations, legal pages, and payment reconciliation.
 
 `docker compose up` is not configured; build and run the included Dockerfile with your deployment platform's database and environment variables.
 
