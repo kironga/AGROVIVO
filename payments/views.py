@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import re
 from datetime import datetime
 
@@ -13,6 +14,26 @@ from django.views.decorators.http import require_POST
 from requests.auth import HTTPBasicAuth
 
 from orders.models import Order, OrderStatus
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_provider_error(response):
+    """Return only Daraja's public error code/message, with secrets redacted."""
+    try:
+        data = response.json()
+    except (ValueError, json.JSONDecodeError):
+        return ""
+    message = str(data.get("errorMessage") or data.get("ResponseDescription") or "")[:240]
+    for secret in (
+        settings.MPESA_CONSUMER_KEY,
+        settings.MPESA_CONSUMER_SECRET,
+        settings.MPESA_PASSKEY,
+    ):
+        if secret:
+            message = message.replace(secret, "[redacted]")
+    code = str(data.get("errorCode") or data.get("ResponseCode") or "")[:40]
+    return f"code={code} message={message}" if code or message else ""
 
 
 def _mpesa_base_url():
@@ -65,8 +86,10 @@ def mpesa_start(request, order_number):
         messages.error(request, "The phone number on this order cannot receive an M-Pesa prompt. Please contact us.")
         return redirect("confirmation", order_number=order_number)
 
+    stage = "callback URL validation"
     try:
         callback_url = _callback_url()
+        stage = "OAuth token request"
         token = _get_access_token()
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         password = base64.b64encode(
@@ -87,6 +110,7 @@ def mpesa_start(request, order_number):
             "AccountReference": account_reference,
             "TransactionDesc": "AgroVivo order",
         }
+        stage = "STK Push request"
         response = requests.post(
             f"{_mpesa_base_url()}/mpesa/stkpush/v1/processrequest",
             json=payload,
@@ -105,11 +129,26 @@ def mpesa_start(request, order_number):
         order.status = OrderStatus.PAYMENT_PENDING
         order.save(update_fields=["mpesa_checkout_request_id", "mpesa_merchant_request_id", "mpesa_account_reference", "status", "updated_at"])
         messages.success(request, "M-Pesa prompt sent. Check your phone and enter your M-Pesa PIN to complete payment.")
-    except (requests.RequestException, ValueError, KeyError) as exc:
-        # Avoid exposing credentials or provider response details to the customer.
+    except requests.RequestException as exc:
+        response = getattr(exc, "response", None)
+        provider_error = _safe_provider_error(response) if response is not None else ""
+        logger.error(
+            "Daraja %s failed for order %s (exception=%s, http_status=%s, %s)",
+            stage,
+            order.order_number,
+            type(exc).__name__,
+            getattr(response, "status_code", "none"),
+            provider_error or "no provider error body",
+        )
         messages.error(request, "We could not reach M-Pesa just now. Please try again shortly.")
-        if settings.DEBUG:
-            print(f"Daraja STK request failed: {exc}")
+    except (ValueError, KeyError) as exc:
+        logger.error(
+            "Daraja %s failed for order %s (exception=%s)",
+            stage,
+            order.order_number,
+            type(exc).__name__,
+        )
+        messages.error(request, "We could not reach M-Pesa just now. Please try again shortly.")
     return redirect("confirmation", order_number=order_number)
 
 
