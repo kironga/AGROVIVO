@@ -87,4 +87,4 @@ def customer_cancel_order(request,order_number):
   messages.error(request,str(error))
  else:
   messages.success(request,f"Order {order.order_number} cancelled. Its stock has been returned to inventory.")
- return redirect("account")
+ return redirect(f"{reverse('account')}?tab=history&history=cancelled#dashboard-history")

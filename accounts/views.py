@@ -21,18 +21,40 @@ def account(request):
     if request.user.is_staff:
         return redirect("dashboard_home")
     profile = CustomerProfile.objects.filter(user=request.user).first()
-    orders = request.user.orders.prefetch_related("items__product").order_by("-created_at")
+    all_orders = request.user.orders.prefetch_related("items__product").order_by("-created_at")
+    order_count = all_orders.count()
+    pending_order_count = all_orders.filter(status__in=["PENDING", "PAYMENT_PENDING"]).count()
+    progress_order_count = all_orders.filter(status__in=["PAID", "PROCESSING", "SHIPPED"]).count()
+    cancelled_order_count = all_orders.filter(status="CANCELLED").count()
+    tab = request.GET.get("tab", "overview")
+    if tab not in {"overview", "history"}:
+        tab = "overview"
+    history_filter = request.GET.get("history", "pending")
+    if history_filter not in {"pending", "progress", "cancelled", "all"}:
+        history_filter = "pending"
+    orders = all_orders
+    if history_filter == "pending":
+        orders = orders.filter(status__in=["PENDING", "PAYMENT_PENDING"])
+    elif history_filter == "progress":
+        orders = orders.filter(status__in=["PAID", "PROCESSING", "SHIPPED"])
+    elif history_filter == "cancelled":
+        orders = orders.filter(status="CANCELLED")
     cart_items = CartItem.objects.filter(user=request.user, product__active=True).select_related("product")
     cart_total = sum(item.product.price_kes * item.quantity for item in cart_items)
     return render(request, "accounts/account.html", {
         "profile": profile,
-        "orders": orders[:6],
-        "order_count": orders.count(),
-        "active_order_count": orders.exclude(status__in=["DELIVERED", "CANCELLED"]).count(),
+        "orders": orders,
+        "order_count": order_count,
+        "pending_order_count": pending_order_count,
+        "progress_order_count": progress_order_count,
+        "cancelled_order_count": cancelled_order_count,
+        "active_order_count": all_orders.exclude(status__in=["DELIVERED", "CANCELLED"]).count(),
+        "tab": tab,
+        "history_filter": history_filter,
         "cart_items": cart_items[:3],
         "cart_count": sum(item.quantity for item in cart_items),
         "cart_total": cart_total,
-        "latest_order": orders.first(),
+        "latest_order": all_orders.first(),
     })
 
 
